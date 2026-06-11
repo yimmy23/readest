@@ -42,6 +42,7 @@ import {
   flushDeferredAction,
   runOrDeferAction,
 } from '../../utils/deferredAction';
+import { Insets } from '@/types/misc';
 import { runSimpleCC } from '@/utils/simplecc';
 import { getWordCount } from '@/utils/word';
 import { getIndexFromCfi, isCfiInLocation } from '@/utils/cfi';
@@ -80,7 +81,10 @@ import {
   mergeImportedBookNotes,
 } from '@/services/annotation/providers/mrexpt';
 
-const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
+const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
+  bookKey,
+  contentInsets,
+}) => {
   const _ = useTranslation();
   const { envConfig, appService } = useEnv();
   const { settings, setSettingsDialogBookKey, setSettingsDialogOpen, setActiveSettingsItemId } =
@@ -273,6 +277,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     handleTouchEnd,
     handlePointerDown,
     handlePointerMove,
+    handleNativeTouchMove,
     handlePointerCancel,
     handlePointerUp,
     handleSelectionchange,
@@ -281,6 +286,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     handleContextmenu,
   } = useTextSelector(
     bookKey,
+    contentInsets,
     setSelection,
     setEditingAnnotation,
     setExternalDragPoint,
@@ -314,6 +320,9 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         androidTouchEndRef.current = false;
         cancelDeferredAction(deferredQuickActionRef.current);
         handleTouchStart();
+      } else if (ev.type === 'touchmove') {
+        // The Android pointer engagement signal (throttled in MainActivity.kt).
+        handleNativeTouchMove(ev.x, ev.y, doc);
       } else if (ev.type === 'touchend') {
         androidTouchEndRef.current = true;
         handleTouchEnd();
