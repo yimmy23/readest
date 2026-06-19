@@ -37,6 +37,29 @@ export function pickWinningPages(
   return { toUpsert };
 }
 
+/**
+ * Field-level last-writer-wins for a books row's reading_status: return the
+ * status fields with the newer reading_status_updated_at (ties → client). NULL
+ * timestamp = epoch 0. Lets reading_status survive even when the whole row is
+ * decided the other way by updated_at (which page-turn progress dominates) —
+ * issue #4634.
+ */
+export function resolveReadingStatusMerge(
+  client: Pick<DBBook, 'reading_status' | 'reading_status_updated_at'>,
+  server: Pick<DBBook, 'reading_status' | 'reading_status_updated_at'>,
+): Pick<DBBook, 'reading_status' | 'reading_status_updated_at'> {
+  const ms = (s?: string | null) => (s ? new Date(s).getTime() : 0);
+  return ms(client.reading_status_updated_at) >= ms(server.reading_status_updated_at)
+    ? {
+        reading_status: client.reading_status,
+        reading_status_updated_at: client.reading_status_updated_at,
+      }
+    : {
+        reading_status: server.reading_status,
+        reading_status_updated_at: server.reading_status_updated_at,
+      };
+}
+
 const transformsToDB = {
   books: transformBookToDB,
   book_notes: transformBookNoteToDB,
@@ -378,7 +401,43 @@ export async function POST(req: NextRequest) {
           const clientIsNewer =
             clientDeletedAt > serverDeletedAt || clientUpdatedAt > serverUpdatedAt;
 
-          if (clientIsNewer) {
+          if (table === 'books') {
+            // `dbRec` is DBBook | DBBookConfig; in the 'books' branch it is always DBBook.
+            const clientBook = dbRec as DBBook;
+            // `serverData` is BookDataRecord but the DB row carries the status columns at
+            // runtime — widen the type without going through `unknown`.
+            const serverBook = serverData as BookDataRecord &
+              Partial<Pick<DBBook, 'reading_status' | 'reading_status_updated_at'>>;
+            const status = resolveReadingStatusMerge(clientBook, serverBook);
+            if (clientIsNewer) {
+              // Client wins the row; graft the fresher status onto it (server's
+              // status may be the newer one even though the row is older).
+              clientBook.reading_status = status.reading_status;
+              clientBook.reading_status_updated_at = status.reading_status_updated_at;
+              toUpdate.push(clientBook);
+            } else {
+              // Only rewrite when the resolved status VALUE differs from the
+              // server's — a timestamp-only difference on the same value is a
+              // no-op, and rewriting it would churn updated_at + re-propagate.
+              const statusChanged = status.reading_status !== serverBook.reading_status;
+              if (statusChanged) {
+                // Server wins the row, but the client's status is newer. Write
+                // server's row with the fresher status and bump updated_at so
+                // peers re-pull the status change.
+                // The runtime DB row carries all DBBook columns; the static type
+                // of `serverBook` is a narrower intersection so `unknown` is
+                // required to bridge the gap at this one construction site.
+                toUpdate.push({
+                  ...serverBook,
+                  reading_status: status.reading_status,
+                  reading_status_updated_at: status.reading_status_updated_at,
+                  updated_at: new Date().toISOString(),
+                } as unknown as DBBook);
+              } else {
+                batchAuthoritativeRecords.push(serverData);
+              }
+            }
+          } else if (clientIsNewer) {
             toUpdate.push(dbRec);
           } else {
             batchAuthoritativeRecords.push(serverData);

@@ -1,4 +1,4 @@
-import { Book, BooksGroup } from '@/types/book';
+import { Book, BooksGroup, ReadingStatus } from '@/types/book';
 import {
   LibraryGroupByType,
   LibrarySecondarySortByType,
@@ -597,6 +597,7 @@ export type BookContextMenuItemId =
   | 'group'
   | 'markFinished'
   | 'markUnread'
+  | 'markAbandoned'
   | 'clearStatus'
   | 'showDetails'
   | 'showInFinder'
@@ -605,6 +606,37 @@ export type BookContextMenuItemId =
   | 'upload'
   | 'share'
   | 'delete';
+
+/**
+ * Build a new Book with an explicit reading status. Stamps both `updatedAt`
+ * (so the library sync picks it up) and `readingStatusUpdatedAt` (so the
+ * field-level merge resolves status independently of progress). Use this for
+ * every deliberate status edit so the timestamp is never forgotten.
+ */
+export const withReadingStatus = (book: Book, status: ReadingStatus | undefined): Book => {
+  const now = Date.now();
+  return { ...book, readingStatus: status, readingStatusUpdatedAt: now, updatedAt: now };
+};
+
+type ReadingStatusFields = Pick<Book, 'readingStatus' | 'readingStatusUpdatedAt'>;
+
+/**
+ * Field-level last-writer-wins for reading status: return whichever side's
+ * status was set more recently (ties → `a`). Missing timestamp = epoch 0.
+ * The book row's `updatedAt` is dominated by page-turn progress, so status
+ * must be resolved by its own timestamp or progress would clobber it.
+ */
+export const pickFresherReadingStatus = (
+  a: ReadingStatusFields,
+  b: ReadingStatusFields,
+): ReadingStatusFields => {
+  const at = (x: ReadingStatusFields) => x.readingStatusUpdatedAt ?? 0;
+  const winner = at(a) >= at(b) ? a : b;
+  return {
+    readingStatus: winner.readingStatus,
+    readingStatusUpdatedAt: winner.readingStatusUpdatedAt,
+  };
+};
 
 /**
  * Resolve the ordered list of context-menu item ids for a book from its state.
@@ -617,8 +649,13 @@ export type BookContextMenuItemId =
 export const getBookContextMenuItemIds = (book: Book): BookContextMenuItemId[] => {
   const ids: BookContextMenuItemId[] = ['select', 'group'];
   ids.push(book.readingStatus === 'finished' ? 'markUnread' : 'markFinished');
+  if (book.readingStatus !== 'abandoned') ids.push('markAbandoned');
   // "Clear Status" is offered only when the book has an explicit status set.
-  if (book.readingStatus === 'finished' || book.readingStatus === 'unread') {
+  if (
+    book.readingStatus === 'finished' ||
+    book.readingStatus === 'unread' ||
+    book.readingStatus === 'abandoned'
+  ) {
     ids.push('clearStatus');
   }
   ids.push('showDetails', 'showInFinder', 'searchGoodreads');
