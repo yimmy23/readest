@@ -5,8 +5,8 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useBookProgress } from '@/store/readerProgressStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { useTranslation } from '@/hooks/useTranslation';
 import { useQuotaStats } from '@/hooks/useQuotaStats';
+import { useTranslation } from '@/hooks/useTranslation';
 import { isCloudSyncAllowed } from '@/utils/access';
 import { debounce } from '@/utils/debounce';
 import { eventDispatcher } from '@/utils/event';
@@ -95,6 +95,8 @@ export const useFileSync = (bookKey: string) => {
   const fileSyncedRef = useRef(false);
   /** Per-instance lock for the cover uploader (gated differently than files). */
   const coverSyncedRef = useRef(false);
+  /** One-shot guard so an expired session toasts once, not on every page-turn. */
+  const authNotifiedRef = useRef(false);
 
   // Switching the active provider mid-session resets the per-book locks so the
   // newly-active backend does a fresh pull-on-open and re-checks file/cover.
@@ -104,6 +106,7 @@ export const useFileSync = (bookKey: string) => {
     coverSyncedRef.current = false;
     lastPulledAtRef.current = 0;
     dirtyRef.current = false;
+    authNotifiedRef.current = false;
   }, [activeKind]);
 
   // Read latest settings from the store (not the closure) when patching the
@@ -187,12 +190,33 @@ export const useFileSync = (bookKey: string) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engineKey, isReady, activeKind, appService, envConfig]);
 
-  const authFailedToast = useCallback(() => {
-    eventDispatcher.dispatch('toast', {
-      type: 'error',
-      message: _('Cloud sync authentication failed. Reconnect in Settings.'),
+  /**
+   * Notify (once) that the active provider's session expired so the user knows
+   * to reconnect — a single top-right reader `hint` (same affordance as the
+   * native "Reading Progress Synced" hint), NOT a per-failure error toast. Reset
+   * on a successful sync / provider switch.
+   */
+  const notifyAuthExpiredOnce = useCallback(() => {
+    if (authNotifiedRef.current) return;
+    authNotifiedRef.current = true;
+    eventDispatcher.dispatch('hint', {
+      bookKey,
+      timeout: 5000,
+      message:
+        activeKind === 'gdrive'
+          ? _('Google Drive session expired. Reconnect in Settings.')
+          : _('Cloud sync session expired. Reconnect in Settings.'),
     });
-  }, [_]);
+  }, [bookKey, activeKind, _]);
+
+  /** Map a sync error: surface an expired session once, log everything. */
+  const handleSyncError = useCallback(
+    (label: string, e: unknown) => {
+      if (e instanceof FileSyncError && e.code === 'AUTH_FAILED') notifyAuthExpiredOnce();
+      console.warn(label, e);
+    },
+    [notifyAuthExpiredOnce],
+  );
 
   /**
    * Push the latest config (progress + booknotes) to the remote. Skips while the
@@ -214,10 +238,10 @@ export const useFileSync = (bookKey: string) => {
       const deviceId = ensureDeviceId();
       await engine.pushBookConfig(book, config, deviceId);
       dirtyRef.current = false;
+      authNotifiedRef.current = false;
       await updateLastSyncedAt(Date.now());
     } catch (e) {
-      if (e instanceof FileSyncError && e.code === 'AUTH_FAILED') authFailedToast();
-      else console.warn('file sync push failed', e);
+      handleSyncError('file sync push failed', e);
     }
   }, [
     allowPush,
@@ -228,7 +252,7 @@ export const useFileSync = (bookKey: string) => {
     engine,
     providerSettings,
     updateLastSyncedAt,
-    authFailedToast,
+    handleSyncError,
   ]);
 
   /**
@@ -251,8 +275,7 @@ export const useFileSync = (bookKey: string) => {
     } catch (e) {
       // Reset the lock on failure so a later trigger retries.
       fileSyncedRef.current = false;
-      if (e instanceof FileSyncError && e.code === 'AUTH_FAILED') authFailedToast();
-      else console.warn('file sync book push failed', e);
+      handleSyncError('file sync book push failed', e);
     }
   }, [
     allowPush,
@@ -261,7 +284,7 @@ export const useFileSync = (bookKey: string) => {
     bookKey,
     engine,
     updateLastSyncedAt,
-    authFailedToast,
+    handleSyncError,
   ]);
 
   /**
@@ -281,10 +304,9 @@ export const useFileSync = (bookKey: string) => {
       await engine.pushBookCover(book);
     } catch (e) {
       coverSyncedRef.current = false;
-      if (e instanceof FileSyncError && e.code === 'AUTH_FAILED') authFailedToast();
-      else console.warn('file sync cover push failed', e);
+      handleSyncError('file sync cover push failed', e);
     }
-  }, [allowPush, getBookData, bookKey, engine, authFailedToast]);
+  }, [allowPush, getBookData, bookKey, engine, handleSyncError]);
 
   /**
    * Pull, merge, and persist, using the same per-config / per-note merge as the
@@ -304,6 +326,8 @@ export const useFileSync = (bookKey: string) => {
     try {
       const result = await engine.pullBookConfig(book, config);
       lastPulledAtRef.current = Date.now();
+      // The pull's getAccessToken succeeded — clear any expired-session notice.
+      authNotifiedRef.current = false;
       if (!result.applied || !result.mergedConfig) return false;
 
       // Surface merged notes through the live view so highlights re-appear /
@@ -342,8 +366,7 @@ export const useFileSync = (bookKey: string) => {
       await updateLastSyncedAt(Date.now());
       return true;
     } catch (e) {
-      if (e instanceof FileSyncError && e.code === 'AUTH_FAILED') authFailedToast();
-      else console.warn('file sync pull failed', e);
+      handleSyncError('file sync pull failed', e);
       return false;
     }
   }, [
@@ -360,7 +383,7 @@ export const useFileSync = (bookKey: string) => {
     settings,
     providerSettings,
     updateLastSyncedAt,
-    authFailedToast,
+    handleSyncError,
   ]);
 
   // Stash the latest callbacks in a ref so the event-bridge effect doesn't
