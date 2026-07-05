@@ -56,6 +56,15 @@ type TTSState =
 
 const HIGHLIGHT_KEY = 'tts-highlight';
 
+// Hook-supplied callbacks rebound on view attach: the constructor-captured
+// closures belong to whichever reader hook created the controller and die
+// with it.
+export interface TTSViewBindings {
+  bookKey: string;
+  preprocessCallback?: (ssml: string) => Promise<string>;
+  onSectionChange?: (sectionIndex: number) => Promise<void>;
+}
+
 // Node filter shared by the live TTS instance and the timeline enumeration —
 // the two MUST segment identically or timeline sentences drift from marks.
 const createTTSNodeFilter = () =>
@@ -125,7 +134,18 @@ export class TTSController extends EventTarget {
   // supported by every client, so 'word' falls back to it automatically.
   #highlightGranularity: TTSHighlightGranularity = 'word';
 
-  state: TTSState = 'stopped';
+  #state: TTSState = 'stopped';
+  #terminated = false;
+  // View attachment: false while the session runs headless (book closed).
+  // The epoch invalidates in-flight attachView calls when a detach (or a
+  // newer attach) supersedes them.
+  #attached = true;
+  #attachEpoch = 0;
+  // Controller-owned foliate TTS text instance. view.close() nulls view.tts,
+  // so the controller keeps its own handle (mirrored to view.tts while a view
+  // is attached, for external consumers).
+  #tts: FoliateView['tts'] = null;
+
   ttsLang: string = '';
   ttsRate: number = 1.0;
   ttsClient: TTSClient;
@@ -162,6 +182,127 @@ export class TTSController extends EventTarget {
     this.onSectionChange = onSectionChange;
   }
 
+  get state(): TTSState {
+    return this.#state;
+  }
+
+  // The state value is a TRANSIT signal ('stopped' occurs on every paragraph
+  // advance and across chapter transitions) — listeners must never infer
+  // session death from it; that is what 'tts-session-ended' is for. Dispatch
+  // is deferred to a microtask so listeners never run re-entrantly inside
+  // stop()/error().
+  set state(value: TTSState) {
+    if (this.#state === value) return;
+    this.#state = value;
+    queueMicrotask(() => {
+      this.dispatchEvent(new CustomEvent('tts-state-change', { detail: { state: value } }));
+    });
+  }
+
+  // True once the session reached a terminal condition (end of content or
+  // unrecoverable error). Rate/voice/navigation restarts never set this.
+  get terminated(): boolean {
+    return this.#terminated;
+  }
+
+  // The live text instance: prefer the view's mirror (the public surface
+  // external callers use) and fall back to the controller-owned handle once
+  // view.close() nulls the mirror.
+  #getTts(): FoliateView['tts'] {
+    return this.view?.tts ?? this.#tts;
+  }
+
+  #terminate(reason: 'ended' | 'error') {
+    if (this.#terminated) return;
+    this.#terminated = true;
+    queueMicrotask(() => {
+      this.dispatchEvent(new CustomEvent('tts-session-ended', { detail: { reason } }));
+    });
+  }
+
+  get isViewAttached(): boolean {
+    return this.#attached;
+  }
+
+  // Enter headless mode. Audio, the abort signal, and the in-flight speak
+  // generator are untouched: only layout-dependent work stops. The old view
+  // object is retained as a pure book handle (view.close() destroys the
+  // renderer but keeps view.book, and getCFI/resolveCFI are book+range math).
+  detachView(): void {
+    this.#attached = false;
+    this.#attachEpoch++;
+    // The unmounted hook's closures read wiped stores; running them headless
+    // crashes the speak loop (e.g. proofread preprocessing on a cleared
+    // viewSettings). Severed here, rebound by attachView.
+    this.preprocessCallback = undefined;
+    this.onSectionChange = undefined;
+  }
+
+  // Adopt a freshly mounted view without touching in-flight audio. Async prep
+  // builds a TTS text instance over the new view's document; the swap itself
+  // is synchronous and re-seeds from the OLD instance's cursor at swap time —
+  // forward() may have auto-advanced during prep, and a seed captured earlier
+  // would replay the previous paragraph.
+  async attachView(view: FoliateView, bindings: TTSViewBindings): Promise<void> {
+    const epoch = ++this.#attachEpoch;
+    const oldTts = this.#getTts();
+    const sectionIndex = Math.max(this.#ttsSectionIndex, 0);
+
+    // Prep (no controller state mutated): resolve the section document from
+    // the new view, preferring its rendered primary content.
+    const contents = view.renderer.getContents();
+    const primary = contents.find((x) => x.index === view.renderer.primaryIndex) ?? contents[0];
+    let doc = primary && (primary.index ?? 0) === sectionIndex ? primary.doc : undefined;
+    if (!doc) {
+      const section = view.book.sections?.[sectionIndex];
+      doc = section?.createDocument ? await section.createDocument() : undefined;
+    }
+    if (!doc) {
+      console.warn('[TTS] attachView: no document for section', sectionIndex);
+      return;
+    }
+    const { TTS } = await import('foliate-js/tts.js');
+    const { textWalker } = await import('foliate-js/text-walker.js');
+    const newTts = new TTS(
+      doc,
+      textWalker,
+      createTTSNodeFilter(),
+      this.#getHighlighter(),
+      this.#ttsGranularity,
+    );
+
+    // A detach (new view closed) or a newer attach superseded this one.
+    if (epoch !== this.#attachEpoch) return;
+
+    // Synchronous swap.
+    this.view = view;
+    this.preprocessCallback = bindings.preprocessCallback;
+    this.onSectionChange = bindings.onSectionChange;
+    this.#attached = true;
+    const lastRange = oldTts?.getLastRange?.();
+    if (lastRange) {
+      try {
+        // Re-derive the seed NOW: CFIs are valid from the old (content
+        // identical) document, and from() needs a range anchored in the new
+        // doc (compareBoundaryPoints throws cross-document).
+        const cfi = view.getCFI(sectionIndex, lastRange);
+        const anchored = view.resolveCFI(cfi).anchor(doc);
+        if (anchored) newTts.from(anchored); // position the iterator; discard SSML
+      } catch (err) {
+        console.warn('[TTS] attachView re-seed failed', err);
+      }
+    }
+    this.#tts = newTts;
+    this.view.tts = newTts;
+    this.#ttsDoc = doc;
+    // The timeline maps the old document's ranges; rebuild lazily.
+    this.#sectionTimeline = null;
+    this.#timelineSectionIndex = -1;
+    this.#currentSentenceIndex = -1;
+    this.reapplyCurrentHighlight();
+    this.redispatchPosition();
+  }
+
   async init() {
     const availableClients = [];
     if (await this.ttsEdgeClient.init()) {
@@ -189,6 +330,7 @@ export class TTSController extends EventTarget {
   }
 
   #getPrimaryContent() {
+    if (!this.#attached) return undefined;
     const contents = this.view.renderer.getContents();
     const primaryIndex = this.view.renderer.primaryIndex;
     return (contents.find((x) => x.index === primaryIndex) ?? contents[0]) as
@@ -285,7 +427,10 @@ export class TTSController extends EventTarget {
     this.#currentSentenceIndex = -1;
     this.#ttsDoc = doc;
 
-    if (this.view.tts && this.view.tts.doc === doc) {
+    const existing = this.#getTts();
+    if (existing && existing.doc === doc) {
+      this.#tts = existing;
+      this.view.tts = existing;
       return true;
     }
 
@@ -298,13 +443,14 @@ export class TTSController extends EventTarget {
     }
     this.#ttsGranularity = granularity;
 
-    this.view.tts = new TTS(
+    this.#tts = new TTS(
       doc,
       textWalker,
       createTTSNodeFilter(),
       this.#getHighlighter(),
       granularity,
     );
+    this.view.tts = this.#tts;
     console.log(`[TTS] Initialized TTS for section ${sectionIndex}`);
 
     return true;
@@ -360,7 +506,7 @@ export class TTSController extends EventTarget {
     if (!Number.isFinite(duration) || duration <= 0) return null;
     let index = this.#currentSentenceIndex;
     if (index < 0) {
-      const range = this.view.tts?.getLastRange();
+      const range = this.#getTts()?.getLastRange();
       index = range ? timeline.indexOfRange(range) : -1;
     }
     if (index < 0) return null;
@@ -385,7 +531,7 @@ export class TTSController extends EventTarget {
     await this.stop();
     if (!isPlaying) this.state = 'forward-paused';
     this.#currentSentenceIndex = target.index;
-    const ssml = this.view.tts?.from(target.sentence.range);
+    const ssml = this.#getTts()?.from(target.sentence.range);
     await this.#handleNavigationWithSSML(ssml, isPlaying);
     if (!isPlaying) this.reapplyCurrentHighlight();
   }
@@ -427,11 +573,14 @@ export class TTSController extends EventTarget {
   async #handleNavigationWithoutSSML(initSection: () => Promise<boolean>, isPlaying: boolean) {
     if (await initSection()) {
       if (isPlaying) {
-        this.#speak(this.view.tts?.start());
+        this.#speak(this.#getTts()?.start());
       } else {
-        this.view.tts?.start();
+        this.#getTts()?.start();
       }
     } else {
+      // No adjacent section in this direction: the session has run out of
+      // content (end of book on forward, start of book on backward).
+      this.#terminate('ended');
       await this.stop();
     }
   }
@@ -443,7 +592,7 @@ export class TTSController extends EventTarget {
   }
 
   async preloadNextSSML(count: number = 4) {
-    const tts = this.view.tts;
+    const tts = this.#getTts();
     if (!tts) return;
 
     // Gather all next SSMLs and rewind synchronously to avoid a race condition:
@@ -494,6 +643,7 @@ export class TTSController extends EventTarget {
 
   async #speak(ssml: string | undefined | Promise<string>, oneTime = false) {
     await this.stop();
+    this.#terminated = false;
     this.#currentSpeakAbortController = new AbortController();
     const { signal } = this.#currentSpeakAbortController;
 
@@ -515,6 +665,8 @@ export class TTSController extends EventTarget {
             if (await this.#initTTSForNextSection()) {
               await this.forward();
             } else {
+              // End of book: nothing left to speak.
+              this.#terminate('ended');
               await this.stop();
             }
           }
@@ -573,6 +725,7 @@ export class TTSController extends EventTarget {
             await this.forward();
           } else {
             this.#consecutiveSpeakErrors = 0;
+            this.#terminate('error');
             await this.stop();
           }
         }
@@ -624,7 +777,7 @@ export class TTSController extends EventTarget {
     // wrong when state transiently becomes 'stopped' during forward()/backward()
     // — a fast play tap in that window would otherwise jump back to section start.
     // tts.resume() falls back to tts.next() on a fresh TTS, so it's safe at init.
-    const ssml = this.view.tts?.resume();
+    const ssml = this.#getTts()?.resume();
     if (this.state.includes('paused')) {
       this.resume();
     }
@@ -670,7 +823,7 @@ export class TTSController extends EventTarget {
     await this.stop();
     if (!isPlaying) this.state = 'backward-paused';
 
-    const ssml = byMark ? this.view.tts?.prevMark(!isPlaying) : this.view.tts?.prev(!isPlaying);
+    const ssml = byMark ? this.#getTts()?.prevMark(!isPlaying) : this.#getTts()?.prev(!isPlaying);
     if (!ssml) {
       await this.#handleNavigationWithoutSSML(() => this.#initTTSForPrevSection(), isPlaying);
     } else {
@@ -685,7 +838,7 @@ export class TTSController extends EventTarget {
     await this.stop();
     if (!isPlaying) this.state = 'forward-paused';
 
-    const ssml = byMark ? this.view.tts?.nextMark(!isPlaying) : this.view.tts?.next(!isPlaying);
+    const ssml = byMark ? this.#getTts()?.nextMark(!isPlaying) : this.#getTts()?.next(!isPlaying);
     if (!ssml) {
       await this.#handleNavigationWithoutSSML(() => this.#initTTSForNextSection(), isPlaying);
     } else {
@@ -763,7 +916,7 @@ export class TTSController extends EventTarget {
   }
 
   getSpokenSentence(): { cfi: string; text: string } | null {
-    const range = this.view.tts?.getLastRange();
+    const range = this.#getTts()?.getLastRange();
     if (!range || this.#ttsSectionIndex < 0) return null;
     try {
       const cfi = this.view.getCFI(this.#ttsSectionIndex, range);
@@ -804,7 +957,7 @@ export class TTSController extends EventTarget {
         // suppress it.
         this.#suppressMarkHighlight =
           this.ttsClient.supportsWordBoundaries() && this.#highlightGranularity === 'word';
-        const range = this.view.tts?.setMark(mark.name);
+        const range = this.#getTts()?.setMark(mark.name);
         this.#suppressMarkHighlight = false;
         this.#speakWordsArmed = !!range;
         if (this.#sectionTimeline && range) {
@@ -835,11 +988,12 @@ export class TTSController extends EventTarget {
   // re-render). In word mode this re-draws the current word so the sentence
   // never reappears over it; otherwise it re-draws the sentence.
   reapplyCurrentHighlight() {
+    if (!this.#attached) return;
     if (this.#wordHighlightActive && this.#lastSpeakWordRange) {
       this.#getHighlighter()(this.#lastSpeakWordRange.cloneRange());
       return;
     }
-    const range = this.view.tts?.getLastRange();
+    const range = this.#getTts()?.getLastRange();
     if (range) this.#getHighlighter()(range.cloneRange());
   }
 
@@ -849,6 +1003,7 @@ export class TTSController extends EventTarget {
   // ttsLocation, so the word position is the accurate reference. Returns null
   // outside word mode, where the sentence-level ttsLocation is correct.
   getCurrentHighlightCfi(): string | null {
+    if (!this.#attached) return null;
     if (!this.#wordHighlightActive || !this.#lastSpeakWordRange || this.#ttsSectionIndex < 0) {
       return null;
     }
@@ -876,7 +1031,7 @@ export class TTSController extends EventTarget {
         }
       } catch {}
     }
-    const range = this.view.tts?.getLastRange();
+    const range = this.#getTts()?.getLastRange();
     if (!range) return;
     try {
       const cfi = this.view.getCFI(this.#ttsSectionIndex, range);
@@ -895,7 +1050,7 @@ export class TTSController extends EventTarget {
     // at mark dispatch (not suppressed), so there's nothing to do here — leave
     // word mode off even though the client reported word boundaries.
     if (this.#highlightGranularity === 'sentence') return;
-    const range = this.view.tts?.getLastRange();
+    const range = this.#getTts()?.getLastRange();
     if (!range) return;
     this.#speakWordBaseRange = range;
     const matchText = rangeTextExcludingInert(range);
@@ -966,6 +1121,7 @@ export class TTSController extends EventTarget {
       return;
     }
     console.error(e);
+    this.#terminate('error');
     this.state = 'stopped';
   }
 
@@ -977,6 +1133,7 @@ export class TTSController extends EventTarget {
     this.#timelineSectionIndex = -1;
     this.#currentSentenceIndex = -1;
     this.#ttsDoc = null;
+    this.#tts = null;
     this.view.tts = null;
     if (this.ttsWebClient.initialized) {
       await this.ttsWebClient.shutdown();
