@@ -6,6 +6,7 @@ import {
 } from '@/types/settings';
 import { formatAuthors, formatTitle } from '@/utils/book';
 import { md5Fingerprint } from '@/utils/md5';
+import { SIZE_PER_LOC, SIZE_PER_TIME_UNIT } from '@/services/constants';
 
 /** Valid sort types for the library */
 const VALID_SORT_TYPES: LibrarySortByType[] = Object.values(LibrarySortByType);
@@ -198,6 +199,50 @@ const getBookReadRatio = (book: Book): number => {
   return current / total;
 };
 
+export const getTimeRemainingMinutes = (book: Book): number | undefined => {
+  const pagesLeft = book.progress ? book.progress[1] - book.progress[0] : undefined;
+  return pagesLeft ? Math.round((pagesLeft * SIZE_PER_LOC) / SIZE_PER_TIME_UNIT) : undefined;
+};
+
+/**
+ * Minutes a book still needs, or `undefined` when its tile shows no time at all.
+ * Finished, on-hold and unread books render a status badge instead of a time (see
+ * `ReadingProgress`), even when they still have pages left — so they have no time
+ * to sort by. Sorting and the label must agree on this, hence the shared helper.
+ */
+export const getDisplayedTimeRemaining = (book: Book): number | undefined => {
+  const { readingStatus } = book;
+  if (readingStatus === 'finished' || readingStatus === 'abandoned' || readingStatus === 'unread') {
+    return undefined;
+  }
+  return getTimeRemainingMinutes(book);
+};
+
+/**
+ * Remaining minutes for a shelf item, or `undefined` when its tile can show no
+ * time at all — that includes every group, since a group tile renders no progress.
+ */
+const getShelfItemTimeRemaining = (item: Book | BooksGroup): number | undefined =>
+  'books' in item ? undefined : getDisplayedTimeRemaining(item);
+
+/**
+ * Wrap a comparator that has *already* had the sort direction applied, so items
+ * with no remaining time always land after the ones that have it — ascending and
+ * descending alike. "No time" is a bucket, not a value: it must sit outside the
+ * sort-order multiplier, otherwise descending would float those items to the top.
+ */
+export const withTimeRemainingLast =
+  <T extends Book | BooksGroup>(sortBy: LibrarySortByType, compare: (a: T, b: T) => number) =>
+  (a: T, b: T): number => {
+    if (sortBy !== LibrarySortByType.TimeRemaining) return compare(a, b);
+    const aTime = getShelfItemTimeRemaining(a);
+    const bTime = getShelfItemTimeRemaining(b);
+    if (aTime === undefined && bTime === undefined) return 0;
+    if (aTime === undefined) return 1;
+    if (bTime === undefined) return -1;
+    return compare(a, b);
+  };
+
 const compareBookByKey = (a: Book, b: Book, sortBy: string, uiLanguage: string): number => {
   switch (sortBy) {
     case LibrarySortByType.Title: {
@@ -249,6 +294,16 @@ const compareBookByKey = (a: Book, b: Book, sortBy: string, uiLanguage: string):
       if (isNaN(bDate)) return -1;
 
       return aDate - bDate;
+    }
+    case LibrarySortByType.TimeRemaining: {
+      const aTime = getDisplayedTimeRemaining(a);
+      const bTime = getDisplayedTimeRemaining(b);
+      // Never subtract two Infinities here: NaN makes the comparator inconsistent
+      // and Array.sort then scatters the no-time books through the shelf.
+      if (aTime === undefined && bTime === undefined) return 0;
+      if (aTime === undefined) return 1;
+      if (bTime === undefined) return -1;
+      return aTime - bTime;
     }
     default:
       return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
@@ -528,6 +583,10 @@ export const getBookSortValue = (book: Book, sortBy: LibrarySortByType): number 
       return isNaN(publishedTime) ? 0 : publishedTime;
     }
 
+    case LibrarySortByType.TimeRemaining:
+      // Return Infinity if a book does not have time remaining (ie. if the book is unread or finished) so it is sorted after books with time remaining
+      return getTimeRemainingMinutes(book) ?? Infinity;
+
     default:
       return book.updatedAt;
   }
@@ -594,6 +653,10 @@ export const getGroupSortValue = (
 
       return publishedDates.length > 0 ? Math.max(...publishedDates) : 0;
     }
+
+    case LibrarySortByType.TimeRemaining:
+      // Return book with least amount of time remaining
+      return Math.min(...books.map((b) => getTimeRemainingMinutes(b) ?? Infinity));
 
     default:
       return Math.max(...books.map((b) => b.updatedAt));

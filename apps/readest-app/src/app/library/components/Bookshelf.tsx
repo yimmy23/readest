@@ -45,6 +45,7 @@ import {
   resolveEffectiveSecondarySort,
   selectRecentShelfBooks,
   withReadingStatus,
+  withTimeRemainingLast,
 } from '../utils/libraryUtils';
 import { eventDispatcher } from '@/utils/event';
 import { getLocalBookFilename } from '@/utils/book';
@@ -191,6 +192,8 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     settings.librarySortBy2 ?? 'none',
   );
   const sortBy2 = resolveEffectiveSecondarySort(sortBy2Raw, groupBy);
+  const showTimeRemaining =
+    sortBy === LibrarySortByType.TimeRemaining || sortBy2 === LibrarySortByType.TimeRemaining;
   const coverFit = searchParams?.get('cover') || settings.libraryCoverFit;
 
   const [loading, setLoading] = useState(false);
@@ -293,12 +296,9 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     // Sort books within each group
     // For series groups, series index is always ascending; sort direction applies to fallback only
     const sortAscending = sortOrder === 'asc';
-    const withinGroupSorter = createWithinGroupSorter(
-      groupBy,
+    const withinGroupSorter = withTimeRemainingLast<Book>(
       sortBy,
-      uiLanguage,
-      sortAscending,
-      sortBy2,
+      createWithinGroupSorter(groupBy, sortBy, uiLanguage, sortAscending, sortBy2),
     );
     groups.forEach((group) => {
       group.books.sort(withinGroupSorter);
@@ -313,39 +313,43 @@ const Bookshelf: React.FC<BookshelfProps> = ({
       // to avoid the merge sort below overriding the within-group sort order
       return ungroupedBooks;
     } else {
-      ungroupedBooks.sort((a, b) => bookSorter(a, b) * sortOrderMultiplier);
+      ungroupedBooks.sort(
+        withTimeRemainingLast<Book>(sortBy, (a, b) => bookSorter(a, b) * sortOrderMultiplier),
+      );
     }
 
     // Merge groups and ungrouped books, then sort them together
     const allItems: (Book | BooksGroup)[] = [...groups, ...ungroupedBooks];
     const groupSorter = createGroupSorter(sortBy, uiLanguage, groupBy);
 
-    allItems.sort((a, b) => {
-      const isAGroup = 'books' in a;
-      const isBGroup = 'books' in b;
+    allItems.sort(
+      withTimeRemainingLast<Book | BooksGroup>(sortBy, (a, b) => {
+        const isAGroup = 'books' in a;
+        const isBGroup = 'books' in b;
 
-      // If both are groups, use group sorter
-      if (isAGroup && isBGroup) {
-        return groupSorter(a, b) * sortOrderMultiplier;
-      }
+        // If both are groups, use group sorter
+        if (isAGroup && isBGroup) {
+          return groupSorter(a, b) * sortOrderMultiplier;
+        }
 
-      // If both are books, use book sorter
-      if (!isAGroup && !isBGroup) {
-        return bookSorter(a, b) * sortOrderMultiplier;
-      }
+        // If both are books, use book sorter
+        if (!isAGroup && !isBGroup) {
+          return bookSorter(a, b) * sortOrderMultiplier;
+        }
 
-      // For series/author groups: compare sort values to interleave properly
-      if (isAGroup && !isBGroup) {
-        const groupValue = getGroupSortValue(a, sortBy, groupBy);
-        const bookValue = getBookSortValue(b, sortBy);
-        return compareSortValues(groupValue, bookValue, uiLanguage) * sortOrderMultiplier;
-      } else if (!isAGroup && isBGroup) {
-        const bookValue = getBookSortValue(a, sortBy);
-        const groupValue = getGroupSortValue(b, sortBy, groupBy);
-        return compareSortValues(bookValue, groupValue, uiLanguage) * sortOrderMultiplier;
-      }
-      return 0;
-    });
+        // For series/author groups: compare sort values to interleave properly
+        if (isAGroup && !isBGroup) {
+          const groupValue = getGroupSortValue(a, sortBy, groupBy);
+          const bookValue = getBookSortValue(b, sortBy);
+          return compareSortValues(groupValue, bookValue, uiLanguage) * sortOrderMultiplier;
+        } else if (!isAGroup && isBGroup) {
+          const bookValue = getBookSortValue(a, sortBy);
+          const groupValue = getGroupSortValue(b, sortBy, groupBy);
+          return compareSortValues(bookValue, groupValue, uiLanguage) * sortOrderMultiplier;
+        }
+        return 0;
+      }),
+    );
 
     return allItems;
   }, [sortOrder, sortBy, sortBy2, groupBy, groupId, uiLanguage, currentBookshelfItems]);
@@ -720,6 +724,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
           handleBookUpload={handleBookUpload}
           handleBookDownload={handleBookDownload}
           showBookDetailsModal={handleShowDetailsBook}
+          showTimeRemaining={showTimeRemaining}
         />
       ) : null,
     [
@@ -732,6 +737,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
       handleBookUpload,
       handleBookDownload,
       handleShowDetailsBook,
+      showTimeRemaining,
     ],
   );
 
@@ -740,8 +746,9 @@ const Bookshelf: React.FC<BookshelfProps> = ({
       autoColumns: settings.libraryAutoColumns,
       fixedColumns: settings.libraryColumns,
       recentShelfHeader,
+      showTimeRemaining,
     }),
-    [settings.libraryAutoColumns, settings.libraryColumns, recentShelfHeader],
+    [settings.libraryAutoColumns, settings.libraryColumns, recentShelfHeader, showTimeRemaining],
   );
 
   const renderBookshelfItem = useCallback(
@@ -796,6 +803,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
           transferProgress={
             'hash' in item ? booksTransferProgress[(item as Book).hash] || null : null
           }
+          showTimeRemaining={showTimeRemaining}
         />
       );
     },
@@ -818,6 +826,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
       handleShowDetailsBook,
       handleLibraryNavigation,
       handleUpdateReadingStatus,
+      showTimeRemaining,
     ],
   );
 
