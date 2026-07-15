@@ -10,9 +10,12 @@ import { throttle } from '@/utils/throttle';
 import { debounce } from '@/utils/debounce';
 import { eventDispatcher } from '@/utils/event';
 import { useSettingsStore } from '@/store/settingsStore';
-import { getCloudSyncProvider } from '@/services/sync/cloudSyncProvider';
+import {
+  isReadestCloudEnabled,
+  getActiveFileSyncBackends,
+} from '@/services/sync/cloudSyncProvider';
 import { isDemoBook } from '@/services/demoBooks';
-import { runActiveFileLibrarySync } from '@/services/sync/file/runLibrarySync';
+import { runFileLibrarySyncPass } from '@/services/sync/file/runLibrarySync';
 import { checkMixedFleetOnce } from '@/services/sync/fleetDetection';
 import { useSyncContext } from '@/context/SyncContext';
 import {
@@ -63,44 +66,56 @@ export const useBooksSync = () => {
 
   const pullLibrary = useCallback(
     async (fullRefresh = false, verbose = false) => {
-      // While a third-party provider is selected, the native book channel
-      // is gated (syncBooks would return undefined and the toast would read
-      // "undefined book(s) synced"); every library-refresh surface — pull to
-      // refresh, the SettingsMenu sync row, BackupWindow — routes through
-      // here, so route them all to the file engine instead. Works logged out
-      // (file sync has no Readest account dependency).
-      const provider = getCloudSyncProvider(useSettingsStore.getState().settings);
-      if (provider !== 'readest') {
-        if (isPullingRef.current) return;
-        try {
-          isPullingRef.current = true;
-          const result = await runActiveFileLibrarySync(envConfig, _);
-          if (verbose) {
-            // Same message as the native Readest Cloud sync below, so every
-            // provider reports its work the same way.
-            eventDispatcher.dispatch('toast', {
-              type: result ? 'info' : 'error',
-              message: result
-                ? _('{{count}} book(s) synced', { count: result.booksSynced })
-                : _('Sync failed'),
-            });
-          }
-        } finally {
-          isPullingRef.current = false;
-        }
-        return;
-      }
-      if (!user) return;
+      // Providers are independently selectable (#5062): an enabled file
+      // backend and Readest Cloud both run their own pass here, every
+      // library-refresh surface — pull to refresh, the SettingsMenu sync
+      // row, BackupWindow — routes through here. The file pass works
+      // logged out (file sync has no Readest account dependency); the
+      // native pull below still requires `user`.
+      const settingsNow = useSettingsStore.getState().settings;
+      const backends = getActiveFileSyncBackends(settingsNow);
+      const readest = isReadestCloudEnabled(settingsNow);
+      const runFilePass = backends.length > 0;
+      const runNativePull = readest && !!user;
+
+      if (!runFilePass && !runNativePull) return;
       if (isPullingRef.current) return;
+
+      isPullingRef.current = true;
       try {
-        isPullingRef.current = true;
-        const library = useLibraryStore.getState().library;
-        const since = (libraryLoaded && library.length === 0) || fullRefresh ? 0 : undefined;
-        const syncedBooksCount = await syncBooks([], 'pull', since);
+        // Both legs run to completion (under the same isPullingRef guard)
+        // before anything is reported: a `verbose` pull emits exactly ONE
+        // toast for the combined outcome, never one per provider. Reporting
+        // from the file leg alone would fire before the native pull even
+        // started, and would show its outcome only — a file-pass failure
+        // masking a native pull that then succeeds, or a book count that
+        // ignores what the native pull actually synced.
+        let fileSynced = 0;
+        let fileSucceeded = false;
+        if (runFilePass) {
+          const result = await runFileLibrarySyncPass(envConfig, _);
+          fileSucceeded = result !== null;
+          fileSynced = result?.booksSynced ?? 0;
+        }
+
+        let nativeSynced = 0;
+        if (runNativePull) {
+          const library = useLibraryStore.getState().library;
+          const since = (libraryLoaded && library.length === 0) || fullRefresh ? 0 : undefined;
+          nativeSynced = (await syncBooks([], 'pull', since)) ?? 0;
+        }
+
         if (verbose) {
+          // The native pull swallows its own errors (returns a count, never
+          // throws), so it never contributes a "failed" leg here — matching
+          // its pre-existing standalone behaviour. Only report failure when
+          // every leg that ran actually failed.
+          const succeeded = (runFilePass && fileSucceeded) || runNativePull;
           eventDispatcher.dispatch('toast', {
-            type: 'info',
-            message: _('{{count}} book(s) synced', { count: syncedBooksCount }),
+            type: succeeded ? 'info' : 'error',
+            message: succeeded
+              ? _('{{count}} book(s) synced', { count: fileSynced + nativeSynced })
+              : _('Sync failed'),
           });
         }
       } finally {
@@ -115,12 +130,12 @@ export const useBooksSync = () => {
     throttle(
       async () => {
         if (isPullingRef.current) return;
-        // Third-party provider selected: the native book channel is gated,
-        // so the interval runs the read-only mixed-fleet probe instead —
-        // a device still writing natively would otherwise fork progress
-        // silently (the auto library sync itself is useLibraryFileSync's).
+        // Readest Cloud unchecked: the native book channel is gated, so the
+        // interval runs the read-only mixed-fleet probe instead — a device
+        // still writing natively would otherwise fork progress silently
+        // (the auto library sync itself is useLibraryFileSync's).
         const settingsNow = useSettingsStore.getState().settings;
-        if (getCloudSyncProvider(settingsNow) !== 'readest') {
+        if (!isReadestCloudEnabled(settingsNow)) {
           void checkMixedFleetOnce(syncClient, settingsNow, _);
           return;
         }

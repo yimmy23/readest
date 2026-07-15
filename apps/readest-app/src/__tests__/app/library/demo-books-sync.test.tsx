@@ -58,11 +58,12 @@ vi.mock('@/hooks/useSync', () => ({
 }));
 
 vi.mock('@/services/sync/cloudSyncProvider', () => ({
-  getCloudSyncProvider: () => 'readest',
+  isReadestCloudEnabled: () => true,
+  getActiveFileSyncBackends: () => [],
 }));
 
 vi.mock('@/services/sync/file/runLibrarySync', () => ({
-  runActiveFileLibrarySync: vi.fn(async () => ({ booksSynced: 0 })),
+  runFileLibrarySyncPass: vi.fn(async () => ({ booksSynced: 0 })),
 }));
 
 vi.mock('@/services/sync/fleetDetection', () => ({
