@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useLayoutEffect, useState } from 'react';
 import { MdClose, MdPauseCircleFilled, MdPlayCircleFilled } from 'react-icons/md';
 import { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
@@ -11,10 +12,7 @@ import { formatPlaybackTime } from '@/utils/time';
 import { TTSPlaybackInfo, usePlaybackInfo } from './usePlaybackInfo';
 import { useCountdownLabel } from './useCountdownLabel';
 import { BsFastForwardFill, BsRewindFill } from 'react-icons/bs';
-
-// Reader text reserves this much bottom clearance while a session is active
-// (card height + bottom gap); FoliateViewer consumes it via applyMarginAndGap.
-export const TTS_MINI_PLAYER_CLEARANCE = 64;
+import { getTTSMiniPlayerBottomOffset } from '../../utils/ttsMiniPlayerPosition';
 
 type TTSMiniPlayerProps = {
   bookKey: string;
@@ -52,7 +50,7 @@ const TTSMiniPlayer = ({
 }: TTSMiniPlayerProps) => {
   const _ = useTranslation();
   const { appService } = useEnv();
-  const { hoveredBookKey, setHoveredBookKey } = useReaderStore();
+  const { hoveredBookKey, setHoveredBookKey, getViewSettings, bottomBarTab } = useReaderStore();
   const { getBookData } = useBookDataStore();
   const progress = useBookProgress(bookKey);
   const playback = usePlaybackInfo({ bookKey, isEink, onGetPlaybackInfo });
@@ -60,9 +58,47 @@ const TTSMiniPlayer = ({
   const iconSize20 = useResponsiveSize(20);
   const iconSize40 = useResponsiveSize(40);
 
-  const isVisible = hoveredBookKey !== bookKey;
   const book = getBookData(bookKey)?.book;
   const sectionLabel = progress?.sectionLabel;
+
+  // Stack above whatever occupies the bottom edge: the bottom bar (or its
+  // expanded action panel) while it is shown, the footer info band once it is
+  // dismissed, or a 16px resting offset. Mirrors FooterBar's mobile/desktop
+  // layout split (see forceMobileLayout there) to pick the right bar height.
+  const viewSettings = getViewSettings(bookKey);
+  const barVisible = hoveredBookKey === bookKey;
+  const safeAreaMargin = appService?.hasSafeAreaInset ? gridInsets.bottom * 0.33 : 0;
+  const forceMobileLayout =
+    !!appService?.isMobile && window.innerWidth >= 640 && window.innerWidth <= window.innerHeight;
+  const usesMobileBar = forceMobileLayout || window.innerWidth < 640 || window.innerHeight < 640;
+
+  // Distance from the bottom edge (safe-area margin excluded) to the top of
+  // the expanded action panel, so the card rides above it. Measured from the
+  // DOM because panel heights are content-driven and their anchor differs per
+  // platform. The panels' paddings are constant and the slide is
+  // transform-only, so subtracting the in-flight translate yields the settled
+  // top edge even mid-animation.
+  const [panelTopOffset, setPanelTopOffset] = useState(0);
+  useLayoutEffect(() => {
+    const cell = document.getElementById(`gridcell-${bookKey}`);
+    const panel =
+      barVisible && bottomBarTab ? cell?.querySelector(`.footerbar-${bottomBarTab}-mobile`) : null;
+    const rect = panel?.getBoundingClientRect();
+    if (!cell || !panel || !rect || rect.height === 0) {
+      setPanelTopOffset(0);
+      return;
+    }
+    const transform = getComputedStyle(panel).transform;
+    const translateY = transform && transform !== 'none' ? new DOMMatrixReadOnly(transform).m42 : 0;
+    const settledTop = rect.top - translateY;
+    setPanelTopOffset(
+      Math.max(0, Math.round(cell.getBoundingClientRect().bottom - settledTop - safeAreaMargin)),
+    );
+  }, [barVisible, bottomBarTab, bookKey, safeAreaMargin]);
+
+  const bottomOffset = viewSettings
+    ? getTTSMiniPlayerBottomOffset(viewSettings, { barVisible, usesMobileBar, panelTopOffset })
+    : 16;
 
   const { ready, position, total, measuredFraction } = playback;
   const forceHours = total >= 3600;
@@ -83,12 +119,12 @@ const TTSMiniPlayer = ({
       role='status'
       aria-label={`${_('Reading aloud')}: ${book?.title ?? ''}`}
       className={clsx(
-        'absolute bottom-2 z-40 inset-x-2 sm:inset-x-0 sm:mx-auto sm:w-full sm:max-w-md',
-        'transition-opacity duration-300',
-        isVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+        'absolute z-40 inset-x-4 sm:inset-x-0 sm:mx-auto sm:w-full sm:max-w-md',
+        'pointer-events-auto transition-[bottom] duration-300',
       )}
       style={{
-        marginBottom: appService?.hasSafeAreaInset ? `${gridInsets.bottom * 0.33}px` : 0,
+        bottom: `${bottomOffset}px`,
+        marginBottom: `${safeAreaMargin}px`,
       }}
       onMouseEnter={() => !appService?.isMobile && setHoveredBookKey('')}
       onTouchStart={() => !appService?.isMobile && setHoveredBookKey('')}
