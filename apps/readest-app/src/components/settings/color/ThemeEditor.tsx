@@ -31,7 +31,7 @@ const ThemePreview: React.FC<{
           color: textColor,
         }}
       >
-        <p className='mb-2 whitespace-pre-line text-xs'>
+        <p className='mb-2 whitespace-pre-line break-words text-xs'>
           {_(
             "All the world's a stage,\nAnd all the men and women merely players;\nThey have their exits and their entrances,\nAnd one man in his time plays many parts,\nHis acts being seven ages.\n\n— William Shakespeare",
           )}
@@ -45,6 +45,24 @@ const ThemePreview: React.FC<{
             {_("(from 'As You Like It', Act II)")}
           </span>
         </p>
+      </div>
+    </div>
+  );
+};
+
+const ThemeColorInput: React.FC<{
+  label: string;
+  hex: string;
+  onChange: (hex: string) => void;
+  pickerPosition?: 'left' | 'center' | 'right';
+}> = ({ label, hex, onChange, pickerPosition = 'left' }) => {
+  return (
+    <div className='flex items-center justify-between gap-2'>
+      <span className='min-w-0 flex-1 truncate' title={label}>
+        {label}
+      </span>
+      <div className='shrink-0'>
+        <ColorInput label={label} value={hex} onChange={onChange} pickerPosition={pickerPosition} />
       </div>
     </div>
   );
@@ -77,6 +95,10 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
 
   const [themeName, setThemeName] = useState(customTheme?.label || _('Custom'));
 
+  const existingTheme = settings.globalReadSettings.customThemes.find(
+    (theme) => theme.name === md5Fingerprint(themeName),
+  );
+
   const getCustomTheme = () => {
     return {
       name: md5Fingerprint(themeName),
@@ -97,62 +119,41 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
   };
 
   return (
-    <div className='mt-6 rounded-lg'>
-      <div className='mb-4'>
-        <div className='mb-4 flex items-center justify-between'>
-          <label className='font-medium'>{_('Custom Theme')}</label>
-          <div className='flex w-[calc(50%-12px)] justify-between'>
-            <button
-              className='btn btn-ghost btn-sm text-base-content px-2'
-              onClick={() => onSave(getCustomTheme())}
-            >
-              {_('Save')}
-            </button>
-
-            {settings.globalReadSettings.customThemes.find(
-              (theme) => theme.name === md5Fingerprint(themeName),
-            ) && (
-              <button
-                className={clsx('btn btn-ghost btn-sm px-2')}
-                onClick={() => onDelete(getCustomTheme())}
-              >
-                {_('Delete')}
-              </button>
-            )}
-
-            <button className='btn btn-ghost btn-sm px-2' onClick={onCancel}>
-              {_('Cancel')}
-            </button>
-          </div>
-        </div>
-        <div className='mb-4 flex items-center justify-between'>
-          <label className='font-medium'>{_('Theme Name')}</label>
-          <input
-            type='text'
-            value={themeName}
-            onChange={(e) => setThemeName(e.target.value)}
-            className='bg-base-100 text-base-content border-base-200 w-[calc(50%-12px)] rounded border p-2 text-sm'
-          />
-        </div>
+    <div className='flex flex-col gap-2 mt-6 rounded-lg'>
+      <div className='flex items-center gap-4'>
+        <label className='font-medium whitespace-nowrap'>{_('Theme Name')}</label>
+        <input
+          type='text'
+          value={themeName}
+          onChange={(e) => setThemeName(e.target.value)}
+          className='bg-base-100 text-base-content border-base-200 min-w-0 flex-1 rounded border p-2 text-sm'
+          placeholder={_('Custom Theme')}
+        />
       </div>
 
-      <div className='grid grid-cols-2 gap-6'>
-        <div className='bg-base-200 rounded-lg p-3'>
-          <h3 className='mb-3 text-center font-medium'>{_('Light Mode')}</h3>
+      <div className='grid grid-cols-2 gap-6 mt-4'>
+        <div className='bg-base-100 rounded-lg p-3'>
+          <h3 className='mb-3 truncate text-center font-medium' title={_('Light Mode')}>
+            {_('Light Mode')}
+          </h3>
 
-          <ColorInput label={_('Text Color')} value={lightTextColor} onChange={setLightTextColor} />
-
-          <ColorInput
-            label={_('Background Color')}
-            value={lightBackgroundColor}
-            onChange={setLightBackgroundColor}
-          />
-
-          <ColorInput
-            label={_('Link Color')}
-            value={lightPrimaryColor}
-            onChange={setLightPrimaryColor}
-          />
+          <div className='flex flex-col gap-2'>
+            <ThemeColorInput
+              label={_('Text Color')}
+              hex={lightTextColor}
+              onChange={setLightTextColor}
+            />
+            <ThemeColorInput
+              label={_('Background Color')}
+              hex={lightBackgroundColor}
+              onChange={setLightBackgroundColor}
+            />
+            <ThemeColorInput
+              label={_('Link Color')}
+              hex={lightPrimaryColor}
+              onChange={setLightPrimaryColor}
+            />
+          </div>
 
           <ThemePreview
             textColor={lightTextColor}
@@ -162,22 +163,31 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
           />
         </div>
 
-        <div className='bg-base-300 rounded-lg p-3'>
-          <h3 className='mb-3 text-center font-medium'>{_('Dark Mode')}</h3>
+        <div className='bg-base-100 rounded-lg p-3'>
+          <h3 className='mb-3 truncate text-center font-medium' title={_('Dark Mode')}>
+            {_('Dark Mode')}
+          </h3>
 
-          <ColorInput label={_('Text Color')} value={darkTextColor} onChange={setDarkTextColor} />
-
-          <ColorInput
-            label={_('Background Color')}
-            value={darkBackgroundColor}
-            onChange={setDarkBackgroundColor}
-          />
-
-          <ColorInput
-            label={_('Link Color')}
-            value={darkPrimaryColor}
-            onChange={setDarkPrimaryColor}
-          />
+          <div className='flex flex-col gap-2'>
+            <ThemeColorInput
+              pickerPosition='right'
+              label={_('Text Color')}
+              hex={darkTextColor}
+              onChange={setDarkTextColor}
+            />
+            <ThemeColorInput
+              pickerPosition='right'
+              label={_('Background Color')}
+              hex={darkBackgroundColor}
+              onChange={setDarkBackgroundColor}
+            />
+            <ThemeColorInput
+              pickerPosition='right'
+              label={_('Link Color')}
+              hex={darkPrimaryColor}
+              onChange={setDarkPrimaryColor}
+            />
+          </div>
 
           <ThemePreview
             textColor={darkTextColor}
@@ -185,6 +195,30 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
             primaryColor={darkPrimaryColor}
             label={_('Preview')}
           />
+        </div>
+      </div>
+      <div
+        className={clsx(
+          'flex sticky bottom-0 bg-base-200 py-2',
+          existingTheme ? 'justify-between' : 'justify-end',
+        )}
+      >
+        {existingTheme && (
+          <button className='btn btn-error btn-sm px-2' onClick={() => onDelete(getCustomTheme())}>
+            {_('Delete')}
+          </button>
+        )}
+
+        <div className='flex gap-2'>
+          <button className='btn btn-ghost btn-sm px-2' onClick={onCancel}>
+            {_('Cancel')}
+          </button>
+          <button
+            className='btn btn-contrast btn-sm text-base-content px-2'
+            onClick={() => onSave(getCustomTheme())}
+          >
+            {_('Save')}
+          </button>
         </div>
       </div>
     </div>
