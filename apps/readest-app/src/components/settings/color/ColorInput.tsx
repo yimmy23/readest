@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { SketchPicker, ColorResult } from 'react-color';
+import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { CgColorPicker } from 'react-icons/cg';
 
 type ColorInputProps = {
@@ -13,7 +13,6 @@ type ColorInputProps = {
    * settles, not on every onChange tick.
    */
   onCommit?: () => void;
-  compact?: boolean;
   /**
    * Render only the color swatch as a circular button — no hex input. Click
    * the swatch to open the picker. Cleaner UX for casual users who don't
@@ -35,7 +34,6 @@ const ColorInput: React.FC<ColorInputProps> = ({
   value,
   onChange,
   onCommit,
-  compact = false,
   swatchOnly = false,
   showPickerIcon = false,
   pickerPosition = 'left',
@@ -60,8 +58,8 @@ const ColorInput: React.FC<ColorInputProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onCommit]);
 
-  const handlePickerChange = (colorResult: ColorResult) => {
-    onChange(colorResult.hex);
+  const handlePickerChange = (colorResultHex: string) => {
+    onChange(colorResultHex);
   };
 
   const getPickerPositionClass = () => {
@@ -98,43 +96,18 @@ const ColorInput: React.FC<ColorInputProps> = ({
         {isOpen && (
           <div
             ref={pickerRef}
-            className={`absolute top-full z-50 py-1 ${getPickerPositionClass()}`}
+            className={`absolute top-full z-50 mt-2 flex flex-col gap-2 rounded-lg border not-eink:border-base-300/50 bg-base-100 p-3 not-eink:shadow-xl items-center ${getPickerPositionClass()}`}
           >
-            <SketchPicker
-              width='200px'
+            <HexColorPicker
               color={value}
               onChange={handlePickerChange}
-              disableAlpha={true}
+              className='eink-bordered rounded-lg m-2'
             />
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (compact) {
-    return (
-      <div className='relative'>
-        <input
-          type='text'
-          value={value}
-          spellCheck={false}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={() => onCommit?.()}
-          onClick={() => setIsOpen(!isOpen)}
-          className='bg-base-100 text-base-content border-base-200/75 w-16 cursor-pointer rounded border px-1 py-0.5 text-center font-mono text-xs'
-        />
-
-        {isOpen && (
-          <div
-            ref={pickerRef}
-            className={`absolute top-full z-50 py-1 ${getPickerPositionClass()}`}
-          >
-            <SketchPicker
-              width='200px'
+            <HexColorInput
               color={value}
               onChange={handlePickerChange}
-              disableAlpha={true}
+              prefixed
+              className='rounded-md px-2 py-1 bg-base-300 text-base-content w-[200px] font-mono eink-bordered'
             />
           </div>
         )}
@@ -165,12 +138,7 @@ const ColorInput: React.FC<ColorInputProps> = ({
       {isOpen && (
         <div ref={pickerRef} className='relative z-50 mt-2'>
           <div className='absolute'>
-            <SketchPicker
-              width='100%'
-              color={value}
-              onChange={handlePickerChange}
-              disableAlpha={true}
-            />
+            <HexColorPicker color={value} onChange={handlePickerChange} className='w-full' />
           </div>
         </div>
       )}
