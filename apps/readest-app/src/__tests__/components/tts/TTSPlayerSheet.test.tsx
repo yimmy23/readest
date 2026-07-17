@@ -116,6 +116,7 @@ const makeProps = (overrides: Record<string, unknown> = {}) => ({
   onGetVoiceId: vi.fn().mockReturnValue('ava'),
   onSelectTimeout: vi.fn(),
   onSeek: vi.fn().mockResolvedValue(undefined),
+  onSeekPreview: vi.fn(),
   onGetPlaybackInfo: vi
     .fn()
     .mockReturnValue({ position: 10, duration: 100, measuredFraction: 0.4 }),
@@ -195,11 +196,44 @@ describe('TTSPlayerSheet', () => {
     expect(props.onForward).toHaveBeenCalledWith(false);
   });
 
-  test('speed button drills into the chips and selecting persists the rate', () => {
+  test('main view offers a close button since desktop has no drag handle', () => {
+    const props = makeProps();
+    render(<TTSPlayerSheet {...props} />);
+    fireEvent.click(screen.getByLabelText('Close'));
+    expect(props.onClose).toHaveBeenCalled();
+  });
+
+  test('main view keeps the cover clear of the sheet top edge on desktop', () => {
+    // The sheet content is pulled up (mt-[-4px]) to tuck under the mobile
+    // drag handle; on sm+ the handle is hidden and the main view needs its
+    // own top padding or the cover clips into the rounded top edge.
+    getBookData.mockReturnValue({
+      book: { title: 'Alice in Wonderland', coverImageUrl: 'blob:cover' },
+    });
+    const { container } = render(<TTSPlayerSheet {...makeProps()} />);
+    const cover = container.querySelector('img');
+    expect(cover).toBeTruthy();
+    expect(cover?.parentElement?.className).toContain('sm:pt-4');
+  });
+
+  test('the speed caption pads and truncates like its sibling captions', () => {
+    // 'Geschwindigkeit' (de) overflows the compact button edge-to-edge
+    // without the max-w-full/truncate/px-1 combo the other captions use.
+    render(<TTSPlayerSheet {...makeProps()} />);
+    const caption = screen.getByText('Speed');
+    expect(caption.className).toContain('max-w-full');
+    expect(caption.className).toContain('truncate');
+    expect(caption.className).toContain('px-1');
+  });
+
+  test('speed button drills into the ruler and releasing a drag persists the rate', () => {
     const props = makeProps();
     render(<TTSPlayerSheet {...props} />);
     fireEvent.click(screen.getByLabelText('Speed'));
-    fireEvent.click(screen.getByRole('radio', { name: '1.5×' }));
+    const slider = screen.getByRole('slider', { name: 'Speed' });
+    fireEvent.change(slider, { target: { value: '1.5' } });
+    expect(props.onSetRate).not.toHaveBeenCalled();
+    fireEvent.pointerUp(slider);
     expect(props.onSetRate).toHaveBeenCalledWith(1.5);
     expect(viewSettings['ttsRate']).toBe(1.5);
     expect(settings.globalViewSettings.ttsRate).toBe(1.5);
@@ -211,18 +245,36 @@ describe('TTSPlayerSheet', () => {
     render(<TTSPlayerSheet {...props} />);
     fireEvent.click(screen.getByLabelText('Speed'));
     expect(screen.queryByText(/Sentence Pause/)).toBeNull();
-    expect(screen.queryByRole('radiogroup', { name: 'Sentence Pause' })).toBeNull();
+    expect(screen.queryByRole('slider', { name: 'Sentence Pause' })).toBeNull();
   });
 
-  test('gap chips show for an Edge client and selecting persists the gap', () => {
+  test('sentence pause ruler shows for an Edge client and a drag persists the gap', () => {
     const props = makeProps({ hasGapControl: true });
     render(<TTSPlayerSheet {...props} />);
     fireEvent.click(screen.getByLabelText('Speed'));
     expect(screen.getByText(/Sentence Pause/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('radio', { name: '0.4s' }));
+    const slider = screen.getByRole('slider', { name: 'Sentence Pause' });
+    fireEvent.change(slider, { target: { value: '0.4' } });
+    expect(props.onSetSentenceGap).not.toHaveBeenCalled();
+    fireEvent.pointerUp(slider);
     expect(props.onSetSentenceGap).toHaveBeenCalledWith(0.4);
     expect(viewSettings['ttsSentenceGap']).toBe(0.4);
     expect(settings.globalViewSettings.ttsSentenceGap).toBe(0.4);
+    expect(saveSettings).toHaveBeenCalled();
+  });
+
+  test('the speed view carries the paragraph pause ruler for every client', () => {
+    const props = makeProps({ hasGapControl: false });
+    render(<TTSPlayerSheet {...props} />);
+    // No dedicated sub-view or main-row button anymore.
+    expect(screen.queryByLabelText('Paragraph Gap')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Speed'));
+    expect(screen.getByText(/Paragraph Pause/)).toBeTruthy();
+    const slider = screen.getByRole('slider', { name: 'Paragraph Pause' });
+    fireEvent.change(slider, { target: { value: '0.75' } });
+    fireEvent.pointerUp(slider);
+    expect(props.onSetParagraphGap).toHaveBeenCalledWith(0.75);
+    expect(viewSettings['ttsParagraphGap']).toBe(0.75);
     expect(saveSettings).toHaveBeenCalled();
   });
 

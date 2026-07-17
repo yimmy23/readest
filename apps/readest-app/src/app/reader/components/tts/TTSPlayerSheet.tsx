@@ -10,7 +10,6 @@ import {
   MdKeyboardDoubleArrowRight,
   MdOutlinePause,
   MdPlayArrow,
-  MdSegment,
   MdOutlineFileDownload,
   MdChevronRight,
 } from 'react-icons/md';
@@ -35,15 +34,20 @@ import { formatPlaybackTime } from '@/utils/time';
 import Dialog from '@/components/Dialog';
 import { TTSPlaybackInfo } from './usePlaybackInfo';
 import { useCountdownLabel } from './useCountdownLabel';
-import Slider from '@/components/Slider';
 import TTSScrubber from './TTSScrubber';
-import SpeedChips, { formatRate } from './SpeedChips';
-import GapChips, { formatGap } from './GapChips';
-import ParagraphGapChips from './ParagraphGapChips';
+import SpeedRuler, { formatRate } from './SpeedRuler';
+import TickRuler from './TickRuler';
 import TTSChaptersView from './TTSChaptersView';
 import type { UseTTSDownloadsResult } from '@/app/reader/hooks/useTTSDownloads';
 
-type SheetView = 'main' | 'speed' | 'voice' | 'timer' | 'paragraphGap' | 'chapters';
+type SheetView = 'main' | 'speed' | 'voice' | 'timer' | 'chapters';
+
+export const formatGap = (sec: number) => `${parseFloat(sec.toFixed(2))}s`;
+
+// Pause ruler configurations: 0.05s steps keep every legacy chip preset
+// reachable (sentence 0-0.6s, paragraph 0-2s).
+const SENTENCE_PAUSE_MARKS = [0, 0.2, 0.4, 0.6];
+const PARAGRAPH_PAUSE_MARKS = [0, 0.5, 1, 1.5, 2];
 
 const getTTSTimeoutOptions = (_: TranslationFunc) => {
   return [
@@ -86,6 +90,7 @@ type TTSPlayerSheetProps = {
   onGetVoiceId: () => string;
   onSelectTimeout: (bookKey: string, value: number) => void;
   onSeek: (seconds: number) => Promise<void>;
+  onSeekPreview: (seconds: number) => void;
   onGetPlaybackInfo: () => TTSPlaybackInfo | null;
   downloads: UseTTSDownloadsResult;
   activeSectionIndex: number | null;
@@ -116,6 +121,7 @@ const TTSPlayerSheet = ({
   onGetVoiceId,
   onSelectTimeout,
   onSeek,
+  onSeekPreview,
   onGetPlaybackInfo,
   downloads,
   activeSectionIndex,
@@ -272,9 +278,23 @@ const TTSPlayerSheet = ({
 
   // The main view carries no header label (the content speaks for itself and
   // vertical space is tight); sub-views keep the back button and their title.
+  // Desktop hides the drag handle and has no swipe-to-dismiss, so the main
+  // view floats the standard dialog close pill over its top-right corner.
   const header =
     view === 'main' ? (
-      <div />
+      <button
+        type='button'
+        aria-label={_('Close')}
+        onClick={onClose}
+        className='bg-base-300/65 btn btn-ghost btn-circle absolute end-3 top-1 z-10 hidden h-6 min-h-6 w-6 focus:outline-none sm:flex'
+      >
+        <svg xmlns='http://www.w3.org/2000/svg' width='1em' height='1em' viewBox='0 0 24 24'>
+          <path
+            fill='currentColor'
+            d='M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z'
+          />
+        </svg>
+      </button>
     ) : (
       <div className='relative flex h-11 w-full items-center px-1'>
         <button
@@ -291,11 +311,9 @@ const TTSPlayerSheet = ({
               ? _('Speed')
               : view === 'voice'
                 ? _('Select Voice')
-                : view === 'paragraphGap'
-                  ? _('Paragraph Gap')
-                  : view === 'chapters'
-                    ? _('Offline Audio')
-                    : _('Set Timeout')}
+                : view === 'chapters'
+                  ? _('Offline Audio')
+                  : _('Set Timeout')}
           </span>
         </div>
       </div>
@@ -313,7 +331,10 @@ const TTSPlayerSheet = ({
       onClose={onClose}
     >
       {view === 'main' && (
-        <div className='flex w-full flex-col items-center gap-4 pb-4'>
+        // sm:pt-4 keeps the cover clear of the box's rounded top edge on
+        // desktop, where the mobile drag handle (and its clearance) is
+        // hidden; on mobile the handle already provides the gap.
+        <div className='flex w-full flex-col items-center gap-4 pb-4 sm:pt-4'>
           {book?.coverImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -333,6 +354,7 @@ const TTSPlayerSheet = ({
               bookKey={bookKey}
               isEink={isEink}
               onSeek={onSeek}
+              onSeekPreview={onSeekPreview}
               onGetPlaybackInfo={onGetPlaybackInfo}
             />
           ) : (
@@ -396,7 +418,9 @@ const TTSPlayerSheet = ({
               className='not-eink:bg-base-200 eink-bordered flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl'
             >
               <span className='text-sm font-semibold tabular-nums'>{formatRate(rate)}</span>
-              <span className='text-base-content/60 text-xs'>{_('Speed')}</span>
+              <span className='text-base-content/60 max-w-full truncate px-1 text-xs'>
+                {_('Speed')}
+              </span>
             </button>
             <button
               type='button'
@@ -418,17 +442,6 @@ const TTSPlayerSheet = ({
               <MdAlarm size={iconSize18} />
               <span className='text-base-content/60 max-w-full truncate px-1 text-xs tabular-nums'>
                 {timerCaption}
-              </span>
-            </button>
-            <button
-              type='button'
-              aria-label={_('Paragraph Gap')}
-              onClick={() => setView('paragraphGap')}
-              className='not-eink:bg-base-200 eink-bordered flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl'
-            >
-              <MdSegment size={iconSize18} />
-              <span className='text-base-content/60 max-w-full truncate px-1 text-xs tabular-nums'>
-                {formatGap(paragraphGap)}
               </span>
             </button>
           </div>
@@ -468,34 +481,40 @@ const TTSPlayerSheet = ({
         />
       )}
       {view === 'speed' && (
-        <div className='flex w-full flex-col items-center gap-4 pb-4 pt-2'>
-          <div className='w-full px-2'>
-            <Slider
-              label={_('Speed')}
-              min={0.5}
-              max={3.0}
-              step={0.05}
-              initialValue={rate}
-              bubbleLabel={formatRate(rate)}
-              minLabel={_('Slow')}
-              maxLabel={_('Fast')}
-              onChange={handleSelectRate}
-            />
-          </div>
-          <SpeedChips rate={rate} onSelect={handleSelectRate} />
+        <div className='flex w-full flex-col items-center pb-4 pt-2'>
+          <SpeedRuler rate={rate} onSelect={handleSelectRate} />
           {hasGapControl && (
             <>
               <div className='text-base-content/60 w-full px-2 py-1 text-sm sm:text-xs'>
-                {_('Sentence Pause')} · {formatGap(gap)}
+                {_('Sentence Pause')}
               </div>
-              <GapChips gap={gap} onSelect={handleSelectGap} />
+              <TickRuler
+                min={0}
+                max={0.6}
+                step={0.05}
+                marks={SENTENCE_PAUSE_MARKS}
+                value={gap}
+                ariaLabel={_('Sentence Pause')}
+                formatValue={formatGap}
+                formatMark={formatGap}
+                onSelect={handleSelectGap}
+              />
             </>
           )}
-        </div>
-      )}
-      {view === 'paragraphGap' && (
-        <div className='flex w-full flex-col items-center pb-4 pt-2'>
-          <ParagraphGapChips gap={paragraphGap} onSelect={handleSelectParagraphGap} />
+          <div className='text-base-content/60 w-full px-2 py-1 text-sm sm:text-xs'>
+            {_('Paragraph Pause')}
+          </div>
+          <TickRuler
+            min={0}
+            max={2}
+            step={0.05}
+            marks={PARAGRAPH_PAUSE_MARKS}
+            value={paragraphGap}
+            ariaLabel={_('Paragraph Pause')}
+            formatValue={formatGap}
+            formatMark={formatGap}
+            onSelect={handleSelectParagraphGap}
+          />
         </div>
       )}
       {view === 'voice' && (
