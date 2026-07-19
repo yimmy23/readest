@@ -199,9 +199,24 @@ const getBookReadRatio = (book: Book): number => {
   return current / total;
 };
 
-export const getTimeRemainingMinutes = (book: Book): number | undefined => {
+export const getTimeRemainingMinutes = (
+  book: Book,
+  medianPageDurationSecs?: number,
+): number | undefined => {
   const pagesLeft = book.progress ? book.progress[1] - book.progress[0] : undefined;
-  return pagesLeft ? Math.round((pagesLeft * SIZE_PER_LOC) / SIZE_PER_TIME_UNIT) : undefined;
+  if (!pagesLeft) return undefined;
+  return convertPagesToTimeRemainingMinutes(pagesLeft, medianPageDurationSecs);
+};
+
+export const convertPagesToTimeRemainingMinutes = (
+  pagesLeft: number,
+  medianPageDurationSecs?: number,
+): number => {
+  // Prefer the reader's own pace; fall back to the coarse global estimate.
+  const minutesPerPage = medianPageDurationSecs
+    ? medianPageDurationSecs / 60
+    : SIZE_PER_LOC / SIZE_PER_TIME_UNIT;
+  return Math.max(1, Math.round(pagesLeft * minutesPerPage));
 };
 
 /**
@@ -210,12 +225,15 @@ export const getTimeRemainingMinutes = (book: Book): number | undefined => {
  * `ReadingProgress`), even when they still have pages left — so they have no time
  * to sort by. Sorting and the label must agree on this, hence the shared helper.
  */
-export const getDisplayedTimeRemaining = (book: Book): number | undefined => {
+export const getDisplayedTimeRemaining = (
+  book: Book,
+  medianPageDurationSecs?: number,
+): number | undefined => {
   const { readingStatus } = book;
   if (readingStatus === 'finished' || readingStatus === 'abandoned' || readingStatus === 'unread') {
     return undefined;
   }
-  return getTimeRemainingMinutes(book);
+  return getTimeRemainingMinutes(book, medianPageDurationSecs);
 };
 
 /**
