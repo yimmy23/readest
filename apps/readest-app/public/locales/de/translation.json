@@ -289,7 +289,6 @@
   "Search in {{count}} Book(s)..._one": "Suche in {{count}} Buch...",
   "Search in {{count}} Book(s)..._other": "Suche in {{count}} Büchern...",
   "No notes match your search": "Noch keine Notizen gefunden",
-  "Search notes and excerpts...": "Notizen und Auszüge suchen...",
   "Sign in to Sync": "Anmelden zum Synchronisieren",
   "Never synced": "Nie synchronisiert",
   "Show Remaining Time": "Verbleibende Zeit anzeigen",
@@ -1739,8 +1738,6 @@
   "Purge all reading data": "Alle Lesedaten bereinigen",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "Dadurch werden Lesefortschritt, Notizen und Lesezeichen dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
   "Also erase reading progress, notes, and bookmarks.": "Löscht auch Lesefortschritt, Notizen und Lesezeichen.",
-  "Background Image (Library)": "Hintergrundbild (Bibliothek)",
-  "Background Image (Reader)": "Hintergrundbild (Leseansicht)",
   "Filter": "Filtern",
   "Sort by": "Sortieren nach",
   "Date modified": "Änderungsdatum",
@@ -1999,5 +1996,10 @@
   "Downloading {{count}} book(s)_one": "{{count}} Buch wird heruntergeladen",
   "Downloading {{count}} book(s)_other": "{{count}} Bücher werden heruntergeladen",
   "Failed to download {{count}} book(s)_one": "Fehler beim Herunterladen von {{count}} Buch",
-  "Failed to download {{count}} book(s)_other": "Fehler beim Herunterladen von {{count}} Büchern"
+  "Failed to download {{count}} book(s)_other": "Fehler beim Herunterladen von {{count}} Büchern",
+  "Search annotations...": "Anmerkungen suchen...",
+  "Add Note": "Notiz hinzufügen",
+  "No Matching Annotations": "Keine passenden Anmerkungen",
+  "Reader": "Leseansicht",
+  "Search excerpts...": "Auszüge suchen..."
 }

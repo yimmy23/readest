@@ -294,7 +294,6 @@
   "Search in {{count}} Book(s)..._many": "Шукати в {{count}} книгах...",
   "Search in {{count}} Book(s)..._other": "Шукати в {{count}} книгах...",
   "No notes match your search": "Нотаток не знайдено",
-  "Search notes and excerpts...": "Шукати нотатки...",
   "Sign in to Sync": "Увійти",
   "Never synced": "Ніколи не синхр.",
   "Show Remaining Time": "Показати залишок часу",
@@ -1805,8 +1804,6 @@
   "Purge all reading data": "Очистити всі дані читання",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "Це назавжди видалить проґрес читання, нотатки та закладки. Цю дію не можна скасувати.",
   "Also erase reading progress, notes, and bookmarks.": "Також видаляє проґрес читання, нотатки та закладки.",
-  "Background Image (Library)": "Фонове зображення (Бібліотека)",
-  "Background Image (Reader)": "Фонове зображення (Режим читання)",
   "Filter": "Фільтр",
   "Sort by": "Сортувати за",
   "Date modified": "Дата зміни",
@@ -2091,5 +2088,10 @@
   "Failed to download {{count}} book(s)_one": "Не вдалося завантажити {{count}} книгу",
   "Failed to download {{count}} book(s)_other": "Не вдалося завантажити {{count}} книг",
   "Failed to download {{count}} book(s)_few": "Не вдалося завантажити {{count}} книг",
-  "Failed to download {{count}} book(s)_many": "Не вдалося завантажити {{count}} книг"
+  "Failed to download {{count}} book(s)_many": "Не вдалося завантажити {{count}} книг",
+  "Search annotations...": "Шукати анотації...",
+  "Add Note": "Додати нотатку",
+  "No Matching Annotations": "Немає відповідних анотацій",
+  "Reader": "Режим читання",
+  "Search excerpts...": "Шукати уривки..."
 }

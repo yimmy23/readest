@@ -180,7 +180,6 @@
   "Excerpts": "உதாரணங்கள்",
   "Notes": "குறிப்புகள்",
   "Add your notes here...": "உங்கள் குறிப்புகளை இங்கே சேர்க்கவும்...",
-  "Search notes and excerpts...": "குறிப்புகள் மற்றும் உதாரணங்களைத் தேடவும்...",
   "{{time}} min left in chapter": "அத்தியாயத்தில் {{time}} நிமிடங்கள் மீதமுள்ளன",
   "{{count}} pages left in chapter_one": "<1>அத்தியாயத்தில் 1 பக்கம் மீதமுள்ளது</1>",
   "{{count}} pages left in chapter_other": "<1>அத்தியாயத்தில் </1><0>{{count}}</0><1> பக்கங்கள் மீதமுள்ளன</1>",
@@ -1739,8 +1738,6 @@
   "Purge all reading data": "அனைத்து வாசிப்புத் தரவையும் அழி",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "இது வாசிப்பு முன்னேற்றம், குறிப்புகள் மற்றும் புக்மார்க்குகளை நிரந்தரமாக அழிக்கும். இதை மீட்டெடுக்க முடியாது.",
   "Also erase reading progress, notes, and bookmarks.": "வாசிப்பு முன்னேற்றம், குறிப்புகள் மற்றும் புக்மார்க்குகளையும் அழிக்கும்.",
-  "Background Image (Library)": "பின்னணி படம் (நூலகம்)",
-  "Background Image (Reader)": "பின்னணி படம் (வாசிப்புப் பக்கம்)",
   "Filter": "வடிகட்டு",
   "Sort by": "வரிசைப்படுத்து",
   "Date modified": "மாற்றிய தேதி",
@@ -1999,5 +1996,10 @@
   "Downloading {{count}} book(s)_one": "{{count}} புத்தகம் பதிவிறக்கப்படுகிறது",
   "Downloading {{count}} book(s)_other": "{{count}} புத்தகங்கள் பதிவிறக்கப்படுகின்றன",
   "Failed to download {{count}} book(s)_one": "{{count}} புத்தகத்தை பதிவிறக்க முடியவில்லை",
-  "Failed to download {{count}} book(s)_other": "{{count}} புத்தகங்களை பதிவிறக்க முடியவில்லை"
+  "Failed to download {{count}} book(s)_other": "{{count}} புத்தகங்களை பதிவிறக்க முடியவில்லை",
+  "Search annotations...": "சிறுகுறிப்புகளைத் தேடவும்...",
+  "Add Note": "குறிப்பு சேர்க்கவும்",
+  "No Matching Annotations": "பொருந்தும் சிறுகுறிப்புகள் இல்லை",
+  "Reader": "வாசிப்புப் பக்கம்",
+  "Search excerpts...": "உதாரணங்களைத் தேடவும்..."
 }

@@ -290,7 +290,6 @@
   "Search in {{count}} Book(s)..._one": "Zoeken in {{count}} Boek...",
   "Search in {{count}} Book(s)..._other": "Zoeken in {{count}} Boeken...",
   "No notes match your search": "Geen notities gevonden",
-  "Search notes and excerpts...": "Zoek notities...",
   "Sign in to Sync": "Meld je aan om te synchroniseren",
   "Never synced": "Nooit gesynchroniseerd",
   "Show Remaining Time": "Toon resterende tijd",
@@ -1739,8 +1738,6 @@
   "Purge all reading data": "Alle leesgegevens wissen",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "Hiermee worden leesvoortgang, notities en bladwijzers permanent gewist. Dit kan niet ongedaan worden gemaakt.",
   "Also erase reading progress, notes, and bookmarks.": "Wist ook leesvoortgang, notities en bladwijzers.",
-  "Background Image (Library)": "Achtergrondafbeelding (Bibliotheek)",
-  "Background Image (Reader)": "Achtergrondafbeelding (Leesweergave)",
   "Filter": "Filteren",
   "Sort by": "Sorteren op",
   "Date modified": "Wijzigingsdatum",
@@ -1999,5 +1996,10 @@
   "Downloading {{count}} book(s)_one": "{{count}} boek wordt gedownload",
   "Downloading {{count}} book(s)_other": "{{count}} boeken worden gedownload",
   "Failed to download {{count}} book(s)_one": "Downloaden van {{count}} boek mislukt",
-  "Failed to download {{count}} book(s)_other": "Downloaden van {{count}} boeken mislukt"
+  "Failed to download {{count}} book(s)_other": "Downloaden van {{count}} boeken mislukt",
+  "Search annotations...": "Aantekeningen zoeken...",
+  "Add Note": "Notitie toevoegen",
+  "No Matching Annotations": "Geen overeenkomende aantekeningen",
+  "Reader": "Leesweergave",
+  "Search excerpts...": "Fragmenten zoeken..."
 }

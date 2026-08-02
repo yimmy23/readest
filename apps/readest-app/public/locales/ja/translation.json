@@ -288,7 +288,6 @@
   "Sort TOC by Page": "目次をページで並べ替え",
   "Search in {{count}} Book(s)..._other": "{{count}}冊の本を検索...",
   "No notes match your search": "ノートが見つかりません",
-  "Search notes and excerpts...": "ノートを検索...",
   "Sign in to Sync": "同期するにはサインイン",
   "Never synced": "まだ同期されていません",
   "Show Remaining Time": "残り時間を表示",
@@ -1706,8 +1705,6 @@
   "Purge all reading data": "すべての読書データを消去",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "読書進捗、メモ、ブックマークが完全に消去されます。この操作は元に戻せません。",
   "Also erase reading progress, notes, and bookmarks.": "読書進捗、メモ、ブックマークも消去します。",
-  "Background Image (Library)": "背景画像（ライブラリ）",
-  "Background Image (Reader)": "背景画像（リーダー）",
   "Filter": "フィルター",
   "Sort by": "並べ替え",
   "Date modified": "更新日",
@@ -1953,5 +1950,10 @@
   "Readest": "Readest",
   "Readest annotations file (.json)": "Readest の注釈ファイル (.json)",
   "Downloading {{count}} book(s)_other": "{{count}} 冊の書籍をダウンロードしています",
-  "Failed to download {{count}} book(s)_other": "{{count}} 冊の書籍のダウンロードに失敗しました"
+  "Failed to download {{count}} book(s)_other": "{{count}} 冊の書籍のダウンロードに失敗しました",
+  "Search annotations...": "注釈を検索...",
+  "Add Note": "メモを追加",
+  "No Matching Annotations": "一致する注釈がありません",
+  "Reader": "リーダー",
+  "Search excerpts...": "抜粋を検索..."
 }

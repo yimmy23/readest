@@ -292,7 +292,6 @@
   "Search in {{count}} Book(s)..._many": "Pesquisar em {{count}} Livros...",
   "Search in {{count}} Book(s)..._other": "Pesquisar em {{count}} Livros...",
   "No notes match your search": "Nenhuma nota encontrada",
-  "Search notes and excerpts...": "Buscar notas...",
   "Sign in to Sync": "Entrar",
   "Never synced": "Nunca sincronizado",
   "Show Remaining Time": "Mostrar Tempo Restante",
@@ -1772,8 +1771,6 @@
   "Purge all reading data": "Limpar todos os dados de leitura",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "Isto apaga permanentemente o progresso de leitura, notas e marcadores. Esta ação não pode ser desfeita.",
   "Also erase reading progress, notes, and bookmarks.": "Também apaga o progresso de leitura, notas e marcadores.",
-  "Background Image (Library)": "Imagem de Fundo (Biblioteca)",
-  "Background Image (Reader)": "Imagem de Fundo (Vista de leitura)",
   "Filter": "Filtrar",
   "Sort by": "Ordenar por",
   "Date modified": "Data de modificação",
@@ -2045,5 +2042,10 @@
   "Downloading {{count}} book(s)_many": "Baixando {{count}} livros",
   "Failed to download {{count}} book(s)_one": "Falha ao baixar {{count}} livro",
   "Failed to download {{count}} book(s)_other": "Falha ao baixar {{count}} livros",
-  "Failed to download {{count}} book(s)_many": "Falha ao baixar {{count}} livros"
+  "Failed to download {{count}} book(s)_many": "Falha ao baixar {{count}} livros",
+  "Search annotations...": "Buscar anotações...",
+  "Add Note": "Adicionar Nota",
+  "No Matching Annotations": "Sem anotações correspondentes",
+  "Reader": "Vista de leitura",
+  "Search excerpts...": "Buscar trechos..."
 }

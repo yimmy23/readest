@@ -290,7 +290,6 @@
   "Search in {{count}} Book(s)..._one": "{{count}} पुस्तक में खोजें...",
   "Search in {{count}} Book(s)..._other": "{{count}} पुस्तकों में खोजें...",
   "No notes match your search": "कोई नोट्स नहीं मिले",
-  "Search notes and excerpts...": "नोट्स खोजें...",
   "Sign in to Sync": "सिंक करने के लिए साइन इन करें",
   "Never synced": "कभी सिंक नहीं किया गया",
   "Show Remaining Time": "शेष समय दिखाएं",
@@ -1739,8 +1738,6 @@
   "Purge all reading data": "सभी पढ़ने का डेटा साफ़ करें",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "यह पढ़ने की प्रगति, नोट्स और बुकमार्क को स्थायी रूप से मिटा देता है। इसे पूर्ववत नहीं किया जा सकता।",
   "Also erase reading progress, notes, and bookmarks.": "पढ़ने की प्रगति, नोट्स और बुकमार्क भी मिटा देता है।",
-  "Background Image (Library)": "पृष्ठभूमि छवि (लाइब्रेरी)",
-  "Background Image (Reader)": "पृष्ठभूमि छवि (रीडर)",
   "Filter": "फ़िल्टर",
   "Sort by": "इसके अनुसार क्रमित करें",
   "Date modified": "संशोधन तिथि",
@@ -1999,5 +1996,10 @@
   "Downloading {{count}} book(s)_one": "{{count}} किताब डाउनलोड हो रही है",
   "Downloading {{count}} book(s)_other": "{{count}} किताबें डाउनलोड हो रही हैं",
   "Failed to download {{count}} book(s)_one": "{{count}} किताब डाउनलोड करने में विफल",
-  "Failed to download {{count}} book(s)_other": "{{count}} किताबें डाउनलोड करने में विफल"
+  "Failed to download {{count}} book(s)_other": "{{count}} किताबें डाउनलोड करने में विफल",
+  "Search annotations...": "टिप्पणियाँ खोजें...",
+  "Add Note": "नोट जोड़ें",
+  "No Matching Annotations": "कोई मेल खाती टिप्पणी नहीं",
+  "Reader": "रीडर",
+  "Search excerpts...": "अंश खोजें..."
 }

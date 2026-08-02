@@ -289,7 +289,6 @@
   "Search in {{count}} Book(s)..._one": "جستجو در {{count}} کتاب...",
   "Search in {{count}} Book(s)..._other": "جستجو در {{count}} کتاب...",
   "No notes match your search": "هیچ یادداشتی با جستجوی شما مطابقت ندارد",
-  "Search notes and excerpts...": "جستجوی یادداشت‌ها و گزیده‌ها...",
   "Sign in to Sync": "برای همگام‌سازی وارد شوید",
   "Never synced": "هرگز همگام‌سازی نشده",
   "Show Remaining Time": "نمایش زمان باقی‌مانده",
@@ -1739,8 +1738,6 @@
   "Purge all reading data": "پاک‌سازی همه داده‌های مطالعه",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "این کار وضعیت مطالعه، یادداشت‌ها و نشانک‌ها را برای همیشه پاک می‌کند. این عمل قابل بازگشت نیست.",
   "Also erase reading progress, notes, and bookmarks.": "همچنین وضعیت مطالعه، یادداشت‌ها و نشانک‌ها را پاک می‌کند.",
-  "Background Image (Library)": "تصویر پس‌زمینه (کتابخانه)",
-  "Background Image (Reader)": "تصویر پس‌زمینه (صفحه مطالعه)",
   "Filter": "فیلتر",
   "Sort by": "مرتب‌سازی بر اساس",
   "Date modified": "تاریخ تغییر",
@@ -1999,5 +1996,10 @@
   "Downloading {{count}} book(s)_one": "در حال دانلود {{count}} کتاب",
   "Downloading {{count}} book(s)_other": "در حال دانلود {{count}} کتاب",
   "Failed to download {{count}} book(s)_one": "دانلود {{count}} کتاب ناموفق بود",
-  "Failed to download {{count}} book(s)_other": "دانلود {{count}} کتاب ناموفق بود"
+  "Failed to download {{count}} book(s)_other": "دانلود {{count}} کتاب ناموفق بود",
+  "Search annotations...": "جستجوی یادداشت‌ها...",
+  "Add Note": "افزودن یادداشت",
+  "No Matching Annotations": "هیچ حاشیه‌نویسی مطابقی نیست",
+  "Reader": "صفحه مطالعه",
+  "Search excerpts...": "جستجوی گزیده‌ها..."
 }

@@ -180,7 +180,6 @@
   "Excerpts": "উদ্ধৃতি",
   "Notes": "নোট",
   "Add your notes here...": "এখানে আপনার নোট যোগ করুন...",
-  "Search notes and excerpts...": "নোট ও উদ্ধৃতি খুঁজুন...",
   "{{time}} min left in chapter": "অধ্যায়ে {{time}} মিনিট বাকি",
   "{{count}} pages left in chapter_one": "<1>অধ্যায়ে ১ পৃষ্ঠা বাকি</1>",
   "{{count}} pages left in chapter_other": "<1>অধ্যায়ে </1><0>{{count}}</0><1> পৃষ্ঠা বাকি</1>",
@@ -1739,8 +1738,6 @@
   "Purge all reading data": "সমস্ত পড়ার ডেটা পরিষ্কার করুন",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "এটি স্থায়ীভাবে পড়ার অগ্রগতি, নোট এবং বুকমার্ক মুছে ফেলে। এটি পূর্বাবস্থায় ফেরানো যাবে না।",
   "Also erase reading progress, notes, and bookmarks.": "পড়ার অগ্রগতি, নোট এবং বুকমার্কও মুছে ফেলে।",
-  "Background Image (Library)": "ব্যাকগ্রাউন্ড ছবি (লাইব্রেরি)",
-  "Background Image (Reader)": "ব্যাকগ্রাউন্ড ছবি (রিডার)",
   "Filter": "ফিল্টার",
   "Sort by": "অনুসারে সাজান",
   "Date modified": "পরিবর্তনের তারিখ",
@@ -1999,5 +1996,10 @@
   "Downloading {{count}} book(s)_one": "{{count}} টি বই ডাউনলোড হচ্ছে",
   "Downloading {{count}} book(s)_other": "{{count}} টি বই ডাউনলোড হচ্ছে",
   "Failed to download {{count}} book(s)_one": "{{count}} টি বই ডাউনলোড ব্যর্থ",
-  "Failed to download {{count}} book(s)_other": "{{count}} টি বই ডাউনলোড ব্যর্থ"
+  "Failed to download {{count}} book(s)_other": "{{count}} টি বই ডাউনলোড ব্যর্থ",
+  "Search annotations...": "টীকা খুঁজুন...",
+  "Add Note": "নোট যোগ করুন",
+  "No Matching Annotations": "কোনো মিলিত টীকা নেই",
+  "Reader": "রিডার",
+  "Search excerpts...": "উদ্ধৃতি খুঁজুন..."
 }

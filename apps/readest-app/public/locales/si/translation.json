@@ -180,7 +180,6 @@
   "Excerpts": "උදාහරණ",
   "Notes": "සටහන්",
   "Add your notes here...": "මෙහි ඔබේ සටහන් එක් කරන්න...",
-  "Search notes and excerpts...": "සටහන් සහ උදාහරණ සොයන්න...",
   "{{time}} min left in chapter": "පරිච්ඡේදයේ මිනිත්තු {{time}} ක් ඉතිරි",
   "{{count}} pages left in chapter_one": "<1>පරිච්ඡේදයේ පිටුව 1 ක් ඉතිරි</1>",
   "{{count}} pages left in chapter_other": "<1>පරිච්ඡේදයේ පිටු </1><0>{{count}}</0><1> ක් ඉතිරි</1>",
@@ -1739,8 +1738,6 @@
   "Purge all reading data": "සියලු කියවීම් දත්ත ඉවත් කරන්න",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "මෙය කියවීමේ ප්‍රගතිය, සටහන් සහ පොත් සලකුණු ස්ථිරවම මකා දමයි. මෙය අහෝසි කළ නොහැක.",
   "Also erase reading progress, notes, and bookmarks.": "කියවීමේ ප්‍රගතිය, සටහන් සහ පොත් සලකුණු ද මකා දමයි.",
-  "Background Image (Library)": "පසුබිම් රූපය (පුස්තකාලය)",
-  "Background Image (Reader)": "පසුබිම් රූපය (කියවීමේ දසුන)",
   "Filter": "පෙරහන",
   "Sort by": "අනුව සකසන්න",
   "Date modified": "වෙනස් කළ දිනය",
@@ -1999,5 +1996,10 @@
   "Downloading {{count}} book(s)_one": "{{count}} පොත බාගනිමින්",
   "Downloading {{count}} book(s)_other": "{{count}} පොත් බාගනිමින්",
   "Failed to download {{count}} book(s)_one": "{{count}} පොත බාගැනීමට අසමත්",
-  "Failed to download {{count}} book(s)_other": "{{count}} පොත් බාගැනීමට අසමත්"
+  "Failed to download {{count}} book(s)_other": "{{count}} පොත් බාගැනීමට අසමත්",
+  "Search annotations...": "සටහන් සොයන්න...",
+  "Add Note": "සටහනක් එකතු කරන්න",
+  "No Matching Annotations": "ගැලපෙන අනුසටහන් නැත",
+  "Reader": "කියවීමේ දසුන",
+  "Search excerpts...": "උදාහරණ සොයන්න..."
 }

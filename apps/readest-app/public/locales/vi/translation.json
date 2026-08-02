@@ -288,7 +288,6 @@
   "Sort TOC by Page": "Sort Mục lục theo Trang",
   "Search in {{count}} Book(s)..._other": "Tìm kiếm trong {{count}} cuốn sách...",
   "No notes match your search": "Không tìm thấy ghi chú nào",
-  "Search notes and excerpts...": "Tìm ghi chú...",
   "Sign in to Sync": "Đăng nhập",
   "Never synced": "Chưa từng đồng bộ",
   "Show Remaining Time": "Hiển thị thời gian còn lại",
@@ -1706,8 +1705,6 @@
   "Purge all reading data": "Xóa toàn bộ dữ liệu đọc",
   "This permanently erases reading progress, notes, and bookmarks. This cannot be undone.": "Thao tác này xóa vĩnh viễn tiến độ đọc, ghi chú và dấu trang. Không thể hoàn tác.",
   "Also erase reading progress, notes, and bookmarks.": "Đồng thời xóa tiến độ đọc, ghi chú và dấu trang.",
-  "Background Image (Library)": "Ảnh nền (Thư viện)",
-  "Background Image (Reader)": "Ảnh nền (Trình đọc)",
   "Filter": "Lọc",
   "Sort by": "Sắp xếp theo",
   "Date modified": "Ngày sửa đổi",
@@ -1953,5 +1950,10 @@
   "Readest": "Readest",
   "Readest annotations file (.json)": "Tệp chú thích của Readest (.json)",
   "Downloading {{count}} book(s)_other": "Đang tải xuống {{count}} cuốn sách",
-  "Failed to download {{count}} book(s)_other": "Không thể tải xuống {{count}} cuốn sách"
+  "Failed to download {{count}} book(s)_other": "Không thể tải xuống {{count}} cuốn sách",
+  "Search annotations...": "Tìm chú thích...",
+  "Add Note": "Thêm ghi chú",
+  "No Matching Annotations": "Không có chú thích phù hợp",
+  "Reader": "Trình đọc",
+  "Search excerpts...": "Tìm trích dẫn..."
 }
