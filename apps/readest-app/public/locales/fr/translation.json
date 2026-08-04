@@ -1013,7 +1013,6 @@
   "Authors": "Auteurs",
   "Books": "Livres",
   "Groups": "Groupes",
-  "Back to TTS Location": "Retour à l'emplacement TTS",
   "Metadata": "Métadonnées",
   "Image viewer": "Visionneuse d'images",
   "Previous Image": "Image précédente",
@@ -2049,5 +2048,9 @@
   "Current Time": "Heure actuelle",
   "Battery Status": "État de la batterie",
   "Battery Percentage": "Pourcentage de batterie",
-  "The system file picker is not available in Gaming Mode. Please switch to Desktop Mode to select files.": "Le sélecteur de fichiers du système n'est pas disponible en mode jeu. Veuillez passer en mode bureau pour sélectionner des fichiers."
+  "The system file picker is not available in Gaming Mode. Please switch to Desktop Mode to select files.": "Le sélecteur de fichiers du système n'est pas disponible en mode jeu. Veuillez passer en mode bureau pour sélectionner des fichiers.",
+  "Book narration": "Narration du livre",
+  "Narration": "Narration",
+  "Includes narration": "Contient une narration",
+  "Back to Read Aloud": "Retour à la lecture à voix haute"
 }

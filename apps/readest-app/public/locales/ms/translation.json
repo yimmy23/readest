@@ -987,7 +987,6 @@
   "Authors": "Penulis",
   "Books": "Buku",
   "Groups": "Kumpulan",
-  "Back to TTS Location": "Kembali ke Lokasi TTS",
   "Metadata": "Metadata",
   "Image viewer": "Penyorot imej",
   "Previous Image": "Imej Sebelumnya",
@@ -1957,5 +1956,9 @@
   "Current Time": "Waktu Sekarang",
   "Battery Status": "Status Bateri",
   "Battery Percentage": "Peratusan Bateri",
-  "The system file picker is not available in Gaming Mode. Please switch to Desktop Mode to select files.": "Pemilih fail sistem tidak tersedia dalam Mod Permainan. Sila tukar ke Mod Desktop untuk memilih fail."
+  "The system file picker is not available in Gaming Mode. Please switch to Desktop Mode to select files.": "Pemilih fail sistem tidak tersedia dalam Mod Permainan. Sila tukar ke Mod Desktop untuk memilih fail.",
+  "Book narration": "Narasi buku",
+  "Narration": "Narasi",
+  "Includes narration": "Menyertakan narasi",
+  "Back to Read Aloud": "Kembali ke Baca Lantang"
 }
