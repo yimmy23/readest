@@ -26,8 +26,6 @@ import { getBookWithUpdatedMetadata, listFormater } from '@/utils/book';
 import { getImportErrorMessage } from '@/services/errors';
 import { ingestFile } from '@/services/ingestService';
 import { eventDispatcher } from '@/utils/event';
-import { ProgressPayload } from '@/utils/transfer';
-import { throttle } from '@/utils/throttle';
 import { transferManager } from '@/services/transferManager';
 import { isReadestCloudStorageActive } from '@/services/sync/cloudSyncProvider';
 import { getFilename, getFolderImportGroupName, joinScannedPath } from '@/utils/path';
@@ -302,8 +300,10 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       | typeof LibraryGroupByType.Subject;
     groupName: string;
   } | null>(null);
+  // Direct (non-queued) download progress, keyed by book hash. Entries are
+  // added and removed by useBookTransferActions, its only writer.
   const [booksTransferProgress, setBooksTransferProgress] = useState<{
-    [key: string]: number | null;
+    [key: string]: number;
   }>({});
   const [pendingNavigationBookIds, setPendingNavigationBookIds] = useState<string[] | null>(null);
   const isInitiating = useRef(false);
@@ -1095,20 +1095,15 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     scanAndImport: autoImportFromWatchedFolders,
   });
 
-  const updateBookTransferProgress = throttle((bookHash: string, progress: ProgressPayload) => {
-    if (progress.total === 0) return;
-    const progressPct = (progress.progress / progress.total) * 100;
-    setBooksTransferProgress((prev) => ({
-      ...prev,
-      [bookHash]: progressPct,
-    }));
-  }, 500);
-
+  // Queue downloads (the TransferQueuePanel path) report progress into the
+  // transfer store instead of through this hook. Bookshelf reads them straight
+  // from the store via `selectActiveBookDownloadProgress` and merges them with
+  // this state, so `booksTransferProgress` keeps a single writer.
   const { handleBookUpload, handleBookDownload } = useBookTransferActions(
     envConfig,
     appService,
     updateBook,
-    updateBookTransferProgress,
+    setBooksTransferProgress,
   );
 
   const handleBookDelete = (deleteAction: DeleteAction) => {
