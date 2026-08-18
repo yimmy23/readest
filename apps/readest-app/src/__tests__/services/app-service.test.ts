@@ -71,6 +71,23 @@ vi.mock('@/services/imageService', () => ({
   deleteImage: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('@/services/dictionaries/dictionaryService', () => ({
+  importDictionaries: vi.fn(),
+  deleteDictionary: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/services/dictionaries/plugins/import', () => ({
+  importPluginDictionaries: vi.fn(),
+}));
+
+vi.mock('@/services/dictionaries/registry', () => ({
+  evictProvider: vi.fn(),
+}));
+
+vi.mock('@/services/dictionaries/plugins/controlService', () => ({
+  getDictionaryPluginControlStore: vi.fn(),
+}));
+
 vi.mock('@/utils/book', () => ({
   getLibraryFilename: vi.fn().mockReturnValue('library.json'),
   getLibraryBackupFilename: vi.fn().mockReturnValue('library_backup.json'),
@@ -98,6 +115,11 @@ import * as Settings from '@/services/settingsService';
 import * as BookSvc from '@/services/bookService';
 import * as CloudSvc from '@/services/cloudService';
 import * as LibrarySvc from '@/services/libraryService';
+import * as DictSvc from '@/services/dictionaries/dictionaryService';
+import * as PluginImport from '@/services/dictionaries/plugins/import';
+import type { ImportedDictionary } from '@/services/dictionaries/types';
+import { evictProvider } from '@/services/dictionaries/registry';
+import { getDictionaryPluginControlStore } from '@/services/dictionaries/plugins/controlService';
 import { ttsDownloadManager } from '@/services/tts/ttsDownloadManager';
 import { clearBookTTSDownloads } from '@/services/tts/providers/bookCacheStore';
 import { ttsSessionManager } from '@/services/tts/TTSSessionManager';
@@ -357,6 +379,113 @@ describe('BaseAppService', () => {
       const result = await service.getImageURL('/img.png');
       expect(mockFs.getImageURL).toHaveBeenCalledWith('/img.png');
       expect(result).toBe('image:url');
+    });
+  });
+
+  describe('dictionary operations', () => {
+    test('passes plugin imports and replacements into legacy duplicate detection', async () => {
+      const oldPlugin = {
+        id: 'old-plugin',
+        kind: 'plugin',
+        name: 'Old plugin',
+        bundleDir: 'old-plugin-dir',
+        files: { pluginSource: 'old.zip' },
+        addedAt: 1,
+      } as ImportedDictionary;
+      const untouched = {
+        id: 'untouched',
+        kind: 'bgl',
+        name: 'Untouched',
+        bundleDir: 'untouched-dir',
+        files: { bgl: 'untouched.bgl' },
+        addedAt: 1,
+      } as ImportedDictionary;
+      const importedPlugin = {
+        ...oldPlugin,
+        id: 'imported-plugin',
+        name: 'Imported plugin',
+      };
+      const replacementPlugin = {
+        ...oldPlugin,
+        id: 'replacement-plugin',
+        name: 'Replacement plugin',
+      };
+      const unclaimed = [{ file: new File(['legacy'], 'legacy.bgl') }];
+      const pluginImportResult = {
+        imported: [importedPlugin],
+        replacements: [{ oldIds: [oldPlugin.id], newDict: replacementPlugin }],
+        unclaimed,
+        failures: [{ name: 'broken.zip', message: 'Invalid Yomitan bank' }],
+      };
+      vi.mocked(PluginImport.importPluginDictionaries).mockResolvedValue(pluginImportResult);
+      vi.mocked(DictSvc.importDictionaries).mockResolvedValue({
+        imported: [],
+        replacements: [],
+        orphanFiles: [],
+      });
+
+      const result = await service.importDictionaries(unclaimed, [oldPlugin, untouched]);
+
+      expect(DictSvc.importDictionaries).toHaveBeenCalledWith(mockFs, unclaimed, [
+        untouched,
+        importedPlugin,
+        replacementPlugin,
+      ]);
+      expect(result).toMatchObject({ importErrors: pluginImportResult.failures });
+    });
+
+    test('returns committed plugin replacements when a legacy import fails', async () => {
+      const oldPlugin = {
+        id: 'old-plugin',
+        kind: 'plugin',
+        name: 'Old plugin',
+        bundleDir: 'old-plugin-dir',
+        files: { pluginSource: 'old.zip' },
+        addedAt: 1,
+      } as ImportedDictionary;
+      const replacementPlugin = {
+        ...oldPlugin,
+        id: 'replacement-plugin',
+        bundleDir: 'replacement-plugin-dir',
+      };
+      const legacyFile = { file: new File(['legacy'], 'legacy.bgl') };
+      vi.mocked(PluginImport.importPluginDictionaries).mockResolvedValue({
+        imported: [],
+        replacements: [{ oldIds: [oldPlugin.id], newDict: replacementPlugin }],
+        unclaimed: [legacyFile],
+        failures: [],
+      });
+      vi.mocked(DictSvc.importDictionaries).mockRejectedValue(
+        new Error('injected legacy write failure'),
+      );
+
+      await expect(service.importDictionaries([legacyFile], [oldPlugin])).resolves.toEqual({
+        imported: [],
+        replacements: [{ oldIds: [oldPlugin.id], newDict: replacementPlugin }],
+        orphanFiles: [],
+        importErrors: [{ name: 'legacy.bgl', message: 'injected legacy write failure' }],
+      });
+    });
+
+    test('evicts lookup state and removes derived plugin indexes before deleting the source', async () => {
+      const removeDictionary = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(getDictionaryPluginControlStore).mockResolvedValue({
+        removeDictionary,
+      } as unknown as Awaited<ReturnType<typeof getDictionaryPluginControlStore>>);
+      const dict = {
+        id: 'plugin-dict',
+        kind: 'plugin',
+        name: 'Plugin dictionary',
+        bundleDir: 'plugin-dir',
+        files: { pluginSource: 'source.zip' },
+        addedAt: 1,
+      } as ImportedDictionary;
+
+      await service.deleteDictionary(dict);
+
+      expect(evictProvider).toHaveBeenCalledWith(dict.id);
+      expect(removeDictionary).toHaveBeenCalledWith(dict.id);
+      expect(DictSvc.deleteDictionary).toHaveBeenCalledWith(mockFs, dict);
     });
   });
 

@@ -5,6 +5,7 @@ import {
   AppService,
   BaseDir,
   DeleteAction,
+  type DictionaryImportProgressHandler,
   DistChannel,
   FileItem,
   FileSystem,
@@ -18,7 +19,7 @@ import { SchemaType } from '@/services/database/migrate';
 import { Book, BookConfig, BookContent, ImportBookOptions, ViewSettings } from '@/types/book';
 import type { BookNav } from '@/services/nav';
 import { getLibraryFilename, getLibraryBackupFilename } from '@/utils/book';
-import { getDirPath } from '@/utils/path';
+import { getDirPath, getFilename } from '@/utils/path';
 
 import { getOSPlatform } from '@/utils/misc';
 import { isStoragePermissionError, requestStoragePermission } from '@/utils/permission';
@@ -110,6 +111,9 @@ export abstract class BaseAppService implements AppService {
     base: BaseDir,
     opts?: DatabaseOpts,
   ): Promise<DatabaseService>;
+  async installDatabase(path: string, base: BaseDir, source: File): Promise<void> {
+    await this.writeFile(path, base, source);
+  }
 
   // Databases live at the resolved fs path on native and node; the web app
   // overrides both because its databases live in OPFS under flattened names,
@@ -310,11 +314,66 @@ export abstract class BaseAppService implements AppService {
   async importDictionaries(
     files: SelectedFile[],
     existingDictionaries: ImportedDictionary[] = [],
+    onProgress?: DictionaryImportProgressHandler,
   ): Promise<DictSvc.ImportDictionariesResult> {
-    return DictSvc.importDictionaries(this.fs, files, existingDictionaries);
+    const { importPluginDictionaries } = await import('./dictionaries/plugins/import');
+    const pluginResult = await importPluginDictionaries(this, files, existingDictionaries, {
+      ...(onProgress ? { onProgress } : {}),
+    });
+    const replacedPluginIds = new Set(
+      pluginResult.replacements.flatMap((replacement) => replacement.oldIds),
+    );
+    const dictionariesForLegacyImport = [
+      ...existingDictionaries.filter((dictionary) => !replacedPluginIds.has(dictionary.id)),
+      ...pluginResult.imported,
+      ...pluginResult.replacements.map((replacement) => replacement.newDict),
+    ];
+    let legacyResult: DictSvc.ImportDictionariesResult;
+    try {
+      legacyResult = await DictSvc.importDictionaries(
+        this.fs,
+        pluginResult.unclaimed,
+        dictionariesForLegacyImport,
+      );
+    } catch (error) {
+      const name =
+        pluginResult.unclaimed
+          .map(
+            (selected) =>
+              selected.file?.name ??
+              selected.name ??
+              (selected.path ? getFilename(selected.path) : undefined),
+          )
+          .filter((value): value is string => Boolean(value))
+          .join(', ') || 'Selected dictionaries';
+      return {
+        imported: pluginResult.imported,
+        replacements: pluginResult.replacements,
+        orphanFiles: [],
+        importErrors: [
+          ...pluginResult.failures,
+          { name, message: error instanceof Error ? error.message : String(error) },
+        ],
+      };
+    }
+    return {
+      imported: [...pluginResult.imported, ...legacyResult.imported],
+      replacements: [...pluginResult.replacements, ...legacyResult.replacements],
+      orphanFiles: legacyResult.orphanFiles,
+      ...(pluginResult.failures.length === 0 ? {} : { importErrors: pluginResult.failures }),
+    };
   }
 
   async deleteDictionary(dict: ImportedDictionary): Promise<void> {
+    if (dict.kind === 'plugin') {
+      const [{ evictProvider }, { getDictionaryPluginControlStore }] = await Promise.all([
+        import('./dictionaries/registry'),
+        import('./dictionaries/plugins/controlService'),
+      ]);
+      evictProvider(dict.id);
+      const controlStore = await getDictionaryPluginControlStore(this);
+      await controlStore.removeDictionary(dict.id);
+    }
     return DictSvc.deleteDictionary(this.fs, dict);
   }
 
