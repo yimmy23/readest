@@ -7,6 +7,7 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
+import { parseNoteMarkdown } from '../../utils/noteMarkdown';
 
 interface AnnotationNotesProps {
   bookKey: string;
@@ -39,6 +40,12 @@ const AnnotationNotes: React.FC<AnnotationNotesProps> = ({
   const sortedNotes = useMemo(() => {
     return [...notes].sort((a, b) => b.updatedAt - a.updatedAt);
   }, [notes]);
+  // Parsing is not free for long notes; the popup re-renders on every
+  // reposition, so cache by the notes list like the sidebar does.
+  const notesHtml = useMemo(
+    () => sortedNotes.map((note) => (note.note ? parseNoteMarkdown(note.note) : '')),
+    [sortedNotes],
+  );
 
   const handleShowAnnotation = (note: BookNote) => {
     if (!note.id) return;
@@ -132,7 +139,10 @@ const AnnotationNotes: React.FC<AnnotationNotesProps> = ({
                 }
               >
                 <div className={clsx('flex flex-col justify-between gap-2')}>
-                  {note.note}
+                  <div
+                    className='prose prose-sm max-w-none'
+                    dangerouslySetInnerHTML={{ __html: notesHtml[index] ?? '' }}
+                  />
                   <span className='text-base-content/50 text-sm sm:text-xs'>
                     {dayjs(note.createdAt).fromNow()}
                   </span>
