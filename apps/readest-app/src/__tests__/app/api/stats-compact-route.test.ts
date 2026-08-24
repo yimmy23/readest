@@ -121,8 +121,10 @@ beforeEach(() => {
         : { eligible: 0, oldest: null, hot_total: 3, archived_to: EPOCH },
     ],
   });
-  rpcHandlers['stat_archive_rows'] = ({ p_user }) =>
-    p_user === 'u1'
+  // p_from-aware: the route assembles a segment from sub-pages and advances
+  // p_from between calls, so a static mock would loop forever
+  rpcHandlers['stat_archive_rows'] = ({ p_user, p_from }) =>
+    p_user === 'u1' && p_from === EPOCH
       ? {
           data: [
             dbRow('2026-07-01T00:00:00.123456+00:00', 1),
@@ -168,8 +170,8 @@ describe('POST /api/stats/compact targeted run ({ user_id })', () => {
     rpcHandlers['stat_archive_candidate'] = () => ({
       data: [{ eligible: 3, oldest: daysAgo(8), hot_total: 10, archived_to: EPOCH }],
     });
-    rpcHandlers['stat_archive_rows'] = ({ p_user }) =>
-      p_user === UID
+    rpcHandlers['stat_archive_rows'] = ({ p_user, p_from }) =>
+      p_user === UID && p_from === EPOCH
         ? { data: [dbRow('2026-07-01T00:00:00+00:00', 1), dbRow('2026-07-01T00:00:00+00:00', 2)] }
         : { data: [] };
   });
@@ -314,11 +316,16 @@ describe('POST /api/stats/compact run', () => {
       p_user: 'u1',
       p_window: '7 days',
     });
+    // sub-pages never ask for more than PostgREST's db-max-rows cap (1000),
+    // whatever STATS_COMPACT_SEGMENT_ROWS says; the first page has no tie cursor
     expect(rpcCalls.find((c) => c.fn === 'stat_archive_rows')?.args).toEqual({
       p_user: 'u1',
       p_from: EPOCH,
       p_window: '7 days',
-      p_limit: 10000,
+      p_limit: 1000,
+      p_tie_book: null,
+      p_tie_page: null,
+      p_tie_start: null,
     });
     // u2 is not eligible: no rows fetched, no object written for it
     expect(
@@ -362,38 +369,125 @@ describe('POST /api/stats/compact run', () => {
     expect(point.doubles.slice(0, 4)).toEqual([2, 1, 1, 3]);
   });
 
-  it('chains segments for a big user, resuming each from the previous updated_to, bounded per run', async () => {
+  it('assembles one segment from capped sub-pages: 1000 + 1000 + 77 rows become a single object', async () => {
+    // PostgREST truncates every RPC response at db-max-rows (1000), so a 10k
+    // segment must be assembled from several <=1000-row calls with p_from
+    // advancing; the object and the commit still cover the whole range.
+    const base = Date.UTC(2026, 6, 1);
+    const all = Array.from({ length: 2077 }, (_, i) =>
+      dbRow(new Date(base + i * 1000).toISOString().replace('Z', '+00:00'), (i % 90) + 1),
+    );
+    rpcHandlers['stat_archive_rows'] = ({ p_from, p_limit }) => ({
+      // '1970-...' sorts before '2026-...', so plain string comparison works
+      data: all.filter((r) => String(r.updated_at) > String(p_from)).slice(0, Number(p_limit)),
+    });
+    const body = await (await post()).json();
+    expect(body).toMatchObject({ ok: true, users_archived: 1, segments: 1, rows: 2077 });
+
+    const rowsCalls = rpcCalls.filter((c) => c.fn === 'stat_archive_rows');
+    // three data sub-pages plus the empty call that proves the user is drained
+    expect(rowsCalls.map((c) => c.args['p_limit'])).toEqual([1000, 1000, 1000, 1000]);
+    expect(rowsCalls[1]!.args['p_from']).toBe(all[999]!.updated_at);
+    expect(rowsCalls[2]!.args['p_from']).toBe(all[1999]!.updated_at);
+    expect(rowsCalls[3]!.args['p_from']).toBe(all[2076]!.updated_at);
+
+    expect(bucket.put).toHaveBeenCalledTimes(1);
+    const [key, bodyText] = bucket.put.mock.calls[0]!;
+    const toMs = base + 2076 * 1000;
+    expect(key).toBe(`stats/v1/u1/${toMs}.json`);
+    const seg = decodeSegment(bodyText as string);
+    expect(seg.rows).toHaveLength(2077);
+    expect(seg.updated_to_ms).toBe(toMs);
+
+    const commit = rpcCalls.find((c) => c.fn === 'stat_archive_commit')!;
+    expect(commit.args).toMatchObject({
+      p_from: EPOCH,
+      p_to: all[2076]!.updated_at,
+      p_rows: 2077,
+    });
+  });
+
+  it('chains segments: a mid-millisecond target cut trims, and the next segment refetches the rest', async () => {
     cfEnv = { ...cfEnv, STATS_COMPACT_SEGMENT_ROWS: '2', STATS_COMPACT_SEGMENTS_PER_USER: '3' };
-    let call = 0;
-    rpcHandlers['stat_archive_rows'] = ({ p_from }) => {
-      call++;
-      if (call === 1) {
-        expect(p_from).toBe(EPOCH);
-        return {
-          data: [dbRow('2026-07-01T00:00:00+00:00', 1), dbRow('2026-07-01T00:00:00+00:00', 2)],
-        };
-      }
-      if (call === 2) {
-        expect(p_from).toBe('2026-07-01T00:00:00+00:00');
-        return {
-          data: [dbRow('2026-07-02T00:00:00+00:00', 3), dbRow('2026-07-02T00:00:00+00:00', 4)],
-        };
-      }
-      expect(p_from).toBe('2026-07-02T00:00:00+00:00');
-      return { data: [] };
-    };
+    const jul1 = [dbRow('2026-07-01T00:00:00+00:00', 1), dbRow('2026-07-01T00:00:00+00:00', 2)];
+    const jul2 = [dbRow('2026-07-02T00:00:00+00:00', 3), dbRow('2026-07-02T00:00:00+00:00', 4)];
+    rpcHandlers['stat_archive_rows'] = ({ p_from }) =>
+      p_from === EPOCH
+        ? { data: jul1 }
+        : p_from === '2026-07-01T00:00:00+00:00'
+          ? { data: jul2 }
+          : { data: [] };
     const body = await (await post()).json();
     expect(body).toMatchObject({ segments: 2, rows: 4, users_archived: 1 });
     expect(bucket.put).toHaveBeenCalledTimes(2);
-    expect(rpcCalls.filter((c) => c.fn === 'stat_archive_rows')).toHaveLength(3);
+    // segment 1 hits the target inside the Jul-1 millisecond, fetches on until a
+    // complete millisecond exists, trims the Jul-2 rows and commits Jul-1 only;
+    // segment 2 refetches the Jul-2 rows from the new boundary and keeps them
+    // once the drained-and-old check closes their millisecond.
+    const commits = rpcCalls.filter((c) => c.fn === 'stat_archive_commit');
+    expect(commits.map((c) => [c.args['p_from'], c.args['p_to'], c.args['p_rows']])).toEqual([
+      [EPOCH, '2026-07-01T00:00:00+00:00', 2],
+      ['2026-07-01T00:00:00+00:00', '2026-07-02T00:00:00+00:00', 2],
+    ]);
+    expect(rpcCalls.filter((c) => c.fn === 'stat_archive_rows')).toHaveLength(4);
   });
 
   it('stops a user after the configured number of segments even when more remain', async () => {
     cfEnv = { ...cfEnv, STATS_COMPACT_SEGMENT_ROWS: '1', STATS_COMPACT_SEGMENTS_PER_USER: '1' };
-    rpcHandlers['stat_archive_rows'] = () => ({ data: [dbRow('2026-07-01T00:00:00+00:00', 1)] });
+    rpcHandlers['stat_archive_rows'] = ({ p_from }) =>
+      p_from === EPOCH ? { data: [dbRow('2026-07-01T00:00:00+00:00', 1)] } : { data: [] };
     const body = await (await post()).json();
     expect(body).toMatchObject({ segments: 1, rows: 1 });
-    expect(rpcCalls.filter((c) => c.fn === 'stat_archive_rows')).toHaveLength(1);
+    // one data page plus the empty page that proves the millisecond is complete
+    expect(rpcCalls.filter((c) => c.fn === 'stat_archive_rows')).toHaveLength(2);
+  });
+
+  it('paginates INSIDE one millisecond with the tie cursor: 1001 equal-timestamp rows, one segment, no loop', async () => {
+    // A restore can land two 500-row chunks in one millisecond, and PostgREST
+    // truncates any response at 1000 rows. The keyset cursor (updated_at,
+    // book_hash, page, start_time) must walk through the millisecond instead of
+    // repeating the same truncated page forever (the migration-020/021-draft bug).
+    const TS = '2026-07-01T00:00:00.123456+00:00';
+    const all = Array.from({ length: 1001 }, (_, i) => dbRow(TS, i + 1));
+    rpcHandlers['stat_archive_rows'] = ({ p_from, p_limit, p_tie_page }) => ({
+      data: all
+        .filter((r) =>
+          p_tie_page == null ? String(r.updated_at) > String(p_from) : r.page > Number(p_tie_page),
+        )
+        .slice(0, Number(p_limit)),
+    });
+    const body = await (await post()).json();
+    expect(body).toMatchObject({ ok: true, users_archived: 1, segments: 1, rows: 1001 });
+
+    const rowsCalls = rpcCalls.filter((c) => c.fn === 'stat_archive_rows');
+    expect(rowsCalls).toHaveLength(3); // 1000 + 1 + the empty drained page
+    expect(rowsCalls[1]!.args).toMatchObject({
+      p_from: TS,
+      p_tie_book: 'h1',
+      p_tie_page: 1000,
+      p_tie_start: 2000,
+    });
+    expect(rowsCalls[2]!.args).toMatchObject({ p_from: TS, p_tie_page: 1001 });
+
+    expect(bucket.put).toHaveBeenCalledTimes(1);
+    const seg = decodeSegment(bucket.put.mock.calls[0]![1] as string);
+    expect(seg.rows).toHaveLength(1001);
+    expect(rpcCalls.find((c) => c.fn === 'stat_archive_commit')?.args).toMatchObject({
+      p_to: TS,
+      p_rows: 1001,
+    });
+  });
+
+  it('defers a user whose only eligible rows sit in a still-fresh millisecond', async () => {
+    // drained, but the trailing millisecond ended too close to the window
+    // cutoff to be provably complete: archive nothing, retry on a later run
+    const fresh = new Date(Date.now() - 7 * 86400000 - 30000).toISOString().replace('Z', '+00:00');
+    rpcHandlers['stat_archive_rows'] = ({ p_from }) =>
+      p_from === EPOCH ? { data: [dbRow(fresh, 1), dbRow(fresh, 2)] } : { data: [] };
+    const body = await (await post()).json();
+    expect(body).toMatchObject({ users_claimed: 2, users_archived: 0, segments: 0, errors: 0 });
+    expect(bucket.put).not.toHaveBeenCalled();
+    expect(rpcCalls.some((c) => c.fn === 'stat_archive_commit')).toBe(false);
   });
 
   it('applies the eligibility rules: min rows, max age, hot cap', async () => {
@@ -408,19 +502,38 @@ describe('POST /api/stats/compact run', () => {
         }[p_user as string],
       ],
     });
-    rpcHandlers['stat_archive_rows'] = () => ({ data: [dbRow('2026-07-01T00:00:00+00:00', 1)] });
+    rpcHandlers['stat_archive_rows'] = ({ p_from }) =>
+      p_from === EPOCH ? { data: [dbRow('2026-07-01T00:00:00+00:00', 1)] } : { data: [] };
     const body = await (await post()).json();
     expect(body).toMatchObject({ users_claimed: 4, users_archived: 3, segments: 3 });
     const archivedUsers = rpcCalls
       .filter((c) => c.fn === 'stat_archive_rows')
       .map((c) => c.args['p_user']);
-    expect(archivedUsers).toEqual(['b', 'c', 'd']);
+    // each user makes a data sub-page call plus the drained-empty one
+    expect([...new Set(archivedUsers)]).toEqual(['b', 'c', 'd']);
   });
 
-  it('counts a delete-count mismatch without failing the run', async () => {
-    rpcHandlers['stat_archive_commit'] = () => ({ data: 2 });
+  it('counts a refused commit (P0001 row-count mismatch) as mismatch + error and leaves the object', async () => {
+    // migration 021: stat_archive_commit raises P0001 and rolls back when the
+    // range's delete count differs from the declared segment row count, so a
+    // counting bug can never lose rows silently
+    rpcHandlers['stat_archive_commit'] = () => ({
+      error: {
+        code: 'P0001',
+        message: 'stat_archive_commit: segment holds 3 rows but range would delete 4 for user u1',
+      },
+    });
     const body = await (await post()).json();
-    expect(body).toMatchObject({ ok: true, segments: 1, commit_mismatches: 1, errors: 0 });
+    expect(body).toMatchObject({
+      ok: true,
+      segments: 0,
+      rows: 0,
+      users_archived: 0,
+      commit_mismatches: 1,
+      errors: 1,
+    });
+    expect(bucket.put).toHaveBeenCalledTimes(1); // object written, never deleted
+    expect(bucket.delete).not.toHaveBeenCalled();
   });
 
   it('treats a lost CAS (40001) as a no-op and never deletes the object', async () => {
@@ -446,9 +559,10 @@ describe('POST /api/stats/compact run', () => {
         },
       ],
     });
-    rpcHandlers['stat_archive_rows'] = () => ({
-      data: [dbRow('2026-07-01T00:00:00.123456+00:00', 1)],
-    });
+    rpcHandlers['stat_archive_rows'] = ({ p_from }) =>
+      p_from === '2026-07-01T00:00:00.123+00:00'
+        ? { data: [dbRow('2026-07-01T00:00:00.123456+00:00', 1)] }
+        : { data: [] };
     const body = await (await post()).json();
     expect(body).toMatchObject({ errors: 2, segments: 0, users_archived: 0 });
     expect(bucket.put).not.toHaveBeenCalled();
@@ -460,7 +574,8 @@ describe('POST /api/stats/compact run', () => {
     rpcHandlers['stat_archive_candidate'] = () => ({
       data: [{ eligible: 600, oldest: daysAgo(40), hot_total: 700, archived_to: EPOCH }],
     });
-    rpcHandlers['stat_archive_rows'] = () => ({ data: [dbRow('2026-07-01T00:00:00+00:00', 1)] });
+    rpcHandlers['stat_archive_rows'] = ({ p_from }) =>
+      p_from === EPOCH ? { data: [dbRow('2026-07-01T00:00:00+00:00', 1)] } : { data: [] };
     bucket.put.mockRejectedValueOnce(new Error('r2 down')).mockResolvedValue(undefined);
     const res = await post();
     expect(res.status).toBe(200);
