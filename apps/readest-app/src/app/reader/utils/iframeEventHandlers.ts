@@ -241,7 +241,28 @@ const getKeyStatus = (event?: MouseEvent | WheelEvent | TouchEvent) => {
 export const handleKeydown = (bookKey: string, event: KeyboardEvent) => {
   const target = event.target as HTMLElement | null;
   const interactiveTarget =
-    !!target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '');
+    !!target?.isContentEditable ||
+    /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '') ||
+    (/^(A|BUTTON)$/.test(target?.tagName ?? '') && (event.key === 'Enter' || event.key === ' '));
+  const postKeydown = (handled: boolean) => {
+    window.postMessage(
+      {
+        type: 'iframe-keydown',
+        bookKey,
+        key: event.key,
+        code: event.code,
+        ctrlKey: event.ctrlKey,
+        shiftKey: event.shiftKey,
+        altKey: event.altKey,
+        metaKey: event.metaKey,
+        altGraphKey: event.getModifierState('AltGraph'),
+        repeat: event.repeat,
+        interactiveTarget,
+        handled,
+      },
+      '*',
+    );
+  };
   keyboardState = {
     key: event.key,
     code: event.code,
@@ -263,25 +284,18 @@ export const handleKeydown = (bookKey: string, event: KeyboardEvent) => {
   if (eventDispatcher.dispatchSync('iframe-page-turn-keydown', { bookKey, event })) {
     event.preventDefault();
     event.stopImmediatePropagation();
+    postKeydown(true);
     return;
   }
 
-  window.postMessage(
-    {
-      type: 'iframe-keydown',
-      bookKey,
-      key: event.key,
-      code: event.code,
-      ctrlKey: event.ctrlKey,
-      shiftKey: event.shiftKey,
-      altKey: event.altKey,
-      metaKey: event.metaKey,
-      altGraphKey: event.getModifierState('AltGraph'),
-      repeat: event.repeat,
-      interactiveTarget,
-    },
-    '*',
-  );
+  if (eventDispatcher.dispatchSync('iframe-shortcut-keydown', { bookKey, event })) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    postKeydown(true);
+    return;
+  }
+
+  postKeydown(false);
 };
 
 export const handleKeyup = (bookKey: string, event: KeyboardEvent) => {
@@ -318,6 +332,7 @@ export const handleMousedown = (bookKey: string, event: MouseEvent) => {
   if (event.button === 1 && autoscrollArmedBooks.has(bookKey)) {
     event.preventDefault();
   }
+  if (event.button === 3 || event.button === 4) event.preventDefault();
 
   window.postMessage(
     {
@@ -344,6 +359,7 @@ export const handleAuxclick = (bookKey: string, event: MouseEvent) => {
   if (event.button === 1 && autoscrollArmedBooks.has(bookKey)) {
     event.preventDefault();
   }
+  if (event.button === 3 || event.button === 4) event.preventDefault();
 };
 
 export const handleMousemove = (bookKey: string, event: MouseEvent) => {
@@ -364,6 +380,10 @@ export const handleMouseup = (bookKey: string, event: MouseEvent) => {
   // we will handle mouse back and forward buttons ourselves
   if ([3, 4].includes(event.button)) {
     event.preventDefault();
+    if (eventDispatcher.dispatchSync('iframe-shortcut-mouseup', { bookKey, event })) {
+      event.stopImmediatePropagation();
+      return;
+    }
   }
   window.postMessage(
     {
