@@ -2272,5 +2272,11 @@
   "Pull-Down to Bookmark": "Tarik ke bawah untuk menambah tandabuku",
   "Pronunciation": "Sebutan",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Memainkan rakaman yang disertakan kamus pada entri, jika ada.",
-  "Auto-play Pronunciation": "Mainkan sebutan secara automatik"
+  "Auto-play Pronunciation": "Mainkan sebutan secara automatik",
+  "Failed to start playback": "Gagal memulakan main balik",
+  "Playing this catalog requires the desktop or mobile app": "Memainkan katalog ini memerlukan aplikasi desktop atau mudah alih",
+  "{{hours}}h {{minutes}}m": "{{hours}} j {{minutes}} min",
+  "{{minutes}}m": "{{minutes}} min",
+  "{{seconds}}s": "{{seconds}} saat",
+  "Could not read the length of every track in this audiobook": "Tidak dapat membaca tempoh setiap trek dalam buku audio ini"
 }

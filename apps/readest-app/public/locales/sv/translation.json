@@ -2332,5 +2332,11 @@
   "Pull-Down to Bookmark": "Dra nedåt för att lägga till bokmärke",
   "Pronunciation": "Uttal",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Spelar upp inspelningen som ordboken levererar med uppslagsordet, när den finns.",
-  "Auto-play Pronunciation": "Spela upp uttal automatiskt"
+  "Auto-play Pronunciation": "Spela upp uttal automatiskt",
+  "Failed to start playback": "Det gick inte att starta uppspelningen",
+  "Playing this catalog requires the desktop or mobile app": "Uppspelning av den här katalogen kräver skrivbords- eller mobilappen",
+  "{{hours}}h {{minutes}}m": "{{hours}} tim {{minutes}} min",
+  "{{minutes}}m": "{{minutes}} min",
+  "{{seconds}}s": "{{seconds}} s",
+  "Could not read the length of every track in this audiobook": "Det gick inte att läsa längden på varje spår i den här ljudboken"
 }

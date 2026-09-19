@@ -2272,5 +2272,11 @@
   "Pull-Down to Bookmark": "དེབ་གྲངས་སྣོན་པར་མར་འཐེན།",
   "Pronunciation": "སྒྲ་གདངས།",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "ཚིག་མཛོད་ཀྱིས་ཚིག་ཐོ་དང་མཉམ་དུ་བཞག་པའི་སྒྲ་ཕབ་ཡོད་ན་དེ་གཏོང་བ།",
-  "Auto-play Pronunciation": "སྒྲ་གདངས་རང་འགུལ་གྱིས་གཏོང་བ།"
+  "Auto-play Pronunciation": "སྒྲ་གདངས་རང་འགུལ་གྱིས་གཏོང་བ།",
+  "Failed to start playback": "གསར་སྒྲོག་འགོ་འཛུགས་མ་ཐུབ།",
+  "Playing this catalog requires the desktop or mobile app": "དཀར་ཆག་འདི་གཏོང་བར་ཌེསིཀ་ཏོབ་བམ་ལག་ཐོགས་མཉེན་ཆས་དགོས།",
+  "{{hours}}h {{minutes}}m": "{{hours}}ཆུ {{minutes}}སྐར",
+  "{{minutes}}m": "{{minutes}}སྐར",
+  "{{seconds}}s": "{{seconds}}སྐར་ཆ",
+  "Could not read the length of every track in this audiobook": "སྒྲ་དེབ་འདིའི་གླུ་གྲངས་རེ་རེའི་རིང་ཚད་ཀློག་མ་ཐུབ།"
 }

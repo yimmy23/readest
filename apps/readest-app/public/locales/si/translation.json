@@ -2332,5 +2332,11 @@
   "Pull-Down to Bookmark": "සටහන් එකතු කිරීමට පහළට අදින්න",
   "Pronunciation": "උච්චාරණය",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "ශබ්දකෝෂය ප්‍රවේශය සමඟ සපයන පටිගත කිරීමක් ඇත්නම් එය වාදනය කරයි.",
-  "Auto-play Pronunciation": "උච්චාරණය ස්වයංක්‍රීයව වාදනය කරන්න"
+  "Auto-play Pronunciation": "උච්චාරණය ස්වයංක්‍රීයව වාදනය කරන්න",
+  "Failed to start playback": "ධාවනය ආරම්භ කිරීම අසාර්ථක විය",
+  "Playing this catalog requires the desktop or mobile app": "මෙම නාමාවලිය වාදනය කිරීමට ඩෙස්ක්ටොප් හෝ ජංගම යෙදුම අවශ්‍යයි",
+  "{{hours}}h {{minutes}}m": "{{hours}}පැ {{minutes}}මි",
+  "{{minutes}}m": "{{minutes}}මි",
+  "{{seconds}}s": "{{seconds}}තත්",
+  "Could not read the length of every track in this audiobook": "මෙම ශ්‍රව්‍ය පොතේ සෑම ඛණ්ඩයකම දිග කියවිය නොහැකි විය"
 }

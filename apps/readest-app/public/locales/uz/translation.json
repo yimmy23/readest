@@ -2332,5 +2332,11 @@
   "Pull-Down to Bookmark": "Xatchoʻp qoʻshish uchun pastga torting",
   "Pronunciation": "Talaffuz",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Lug'at maqolaga ilova qilgan yozuvni, agar mavjud bo'lsa, ijro etadi.",
-  "Auto-play Pronunciation": "Talaffuzni avtomatik ijro etish"
+  "Auto-play Pronunciation": "Talaffuzni avtomatik ijro etish",
+  "Failed to start playback": "Ijro etishni boshlab boʻlmadi",
+  "Playing this catalog requires the desktop or mobile app": "Bu katalogni ijro etish uchun desktop yoki mobil ilova kerak",
+  "{{hours}}h {{minutes}}m": "{{hours}} soat {{minutes}} daq",
+  "{{minutes}}m": "{{minutes}} daq",
+  "{{seconds}}s": "{{seconds}} s",
+  "Could not read the length of every track in this audiobook": "Bu audiokitobdagi har bir trek uzunligini o‘qib bo‘lmadi"
 }

@@ -2272,5 +2272,11 @@
   "Pull-Down to Bookmark": "下拉添加书签",
   "Pronunciation": "发音",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "播放词典随词条附带的发音录音（如果有）。",
-  "Auto-play Pronunciation": "自动播放发音"
+  "Auto-play Pronunciation": "自动播放发音",
+  "Failed to start playback": "启动播放失败",
+  "Playing this catalog requires the desktop or mobile app": "播放此目录需要使用桌面或移动应用",
+  "{{hours}}h {{minutes}}m": "{{hours}} 小时 {{minutes}} 分",
+  "{{minutes}}m": "{{minutes}} 分钟",
+  "{{seconds}}s": "{{seconds}} 秒",
+  "Could not read the length of every track in this audiobook": "无法读取这本有声书中每个音轨的时长"
 }

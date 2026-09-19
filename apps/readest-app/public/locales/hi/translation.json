@@ -2332,5 +2332,11 @@
   "Pull-Down to Bookmark": "मार्कर जोड़ने के लिए नीचे खींचें",
   "Pronunciation": "उच्चारण",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "शब्दकोश प्रविष्टि के साथ जो रिकॉर्डिंग देता है, उपलब्ध होने पर उसे चलाता है।",
-  "Auto-play Pronunciation": "उच्चारण अपने आप चलाएँ"
+  "Auto-play Pronunciation": "उच्चारण अपने आप चलाएँ",
+  "Failed to start playback": "प्लेबैक शुरू नहीं हो सका",
+  "Playing this catalog requires the desktop or mobile app": "इस कैटलॉग को चलाने के लिए डेस्कटॉप या मोबाइल ऐप आवश्यक है",
+  "{{hours}}h {{minutes}}m": "{{hours}}घं {{minutes}}मि",
+  "{{minutes}}m": "{{minutes}}मि",
+  "{{seconds}}s": "{{seconds}}से",
+  "Could not read the length of every track in this audiobook": "इस ऑडियोबुक के हर ट्रैक की अवधि नहीं पढ़ी जा सकी"
 }

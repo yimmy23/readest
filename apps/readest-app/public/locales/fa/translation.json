@@ -2332,5 +2332,11 @@
   "Pull-Down to Bookmark": "برای افزودن نشانک به پایین بکشید",
   "Pronunciation": "تلفظ",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "ضبطی را که واژه‌نامه همراه مدخل ارائه می‌کند، در صورت وجود پخش می‌کند.",
-  "Auto-play Pronunciation": "پخش خودکار تلفظ"
+  "Auto-play Pronunciation": "پخش خودکار تلفظ",
+  "Failed to start playback": "شروع پخش ناموفق بود",
+  "Playing this catalog requires the desktop or mobile app": "پخش این فهرست به برنامه دسکتاپ یا موبایل نیاز دارد",
+  "{{hours}}h {{minutes}}m": "{{hours}} س {{minutes}} د",
+  "{{minutes}}m": "{{minutes}} د",
+  "{{seconds}}s": "{{seconds}} ث",
+  "Could not read the length of every track in this audiobook": "طول همهٔ قطعه‌های این کتاب صوتی خوانده نشد"
 }

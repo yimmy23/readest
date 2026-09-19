@@ -2392,5 +2392,11 @@
   "Pull-Down to Bookmark": "משוך למטה להוספת סימנייה",
   "Pronunciation": "הגייה",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "מנגן את ההקלטה שהמילון מצרף לערך, כאשר היא קיימת.",
-  "Auto-play Pronunciation": "נגן הגייה אוטומטית"
+  "Auto-play Pronunciation": "נגן הגייה אוטומטית",
+  "Failed to start playback": "ההפעלה נכשלה",
+  "Playing this catalog requires the desktop or mobile app": "השמעת קטלוג זה מחייבת את אפליקציית שולחן העבודה או הנייד",
+  "{{hours}}h {{minutes}}m": "{{hours}} ש׳ {{minutes}} ד׳",
+  "{{minutes}}m": "{{minutes}} ד׳",
+  "{{seconds}}s": "{{seconds}} שנ׳",
+  "Could not read the length of every track in this audiobook": "לא ניתן היה לקרוא את אורך כל הרצועות בספר השמע הזה"
 }

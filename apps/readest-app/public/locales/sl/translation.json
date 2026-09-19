@@ -2452,5 +2452,11 @@
   "Pull-Down to Bookmark": "Povlecite navzdol za dodajanje zaznamka",
   "Pronunciation": "Izgovorjava",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Predvaja posnetek, ki ga slovar priloži geslu, če ta obstaja.",
-  "Auto-play Pronunciation": "Samodejno predvajaj izgovorjavo"
+  "Auto-play Pronunciation": "Samodejno predvajaj izgovorjavo",
+  "Failed to start playback": "Predvajanja ni bilo mogoče začeti",
+  "Playing this catalog requires the desktop or mobile app": "Predvajanje tega kataloga zahteva namizno ali mobilno aplikacijo",
+  "{{hours}}h {{minutes}}m": "{{hours}} h {{minutes}} min",
+  "{{minutes}}m": "{{minutes}} min",
+  "{{seconds}}s": "{{seconds}} s",
+  "Could not read the length of every track in this audiobook": "Dolžine vseh posnetkov te zvočne knjige ni bilo mogoče prebrati"
 }

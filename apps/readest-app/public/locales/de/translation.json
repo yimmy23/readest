@@ -2332,5 +2332,11 @@
   "Pull-Down to Bookmark": "Herunterziehen, um Lesezeichen hinzuzufügen",
   "Pronunciation": "Aussprache",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Spielt die Aufnahme ab, die ein Wörterbuch dem Eintrag beilegt, sofern vorhanden.",
-  "Auto-play Pronunciation": "Aussprache automatisch abspielen"
+  "Auto-play Pronunciation": "Aussprache automatisch abspielen",
+  "Failed to start playback": "Wiedergabe konnte nicht gestartet werden",
+  "Playing this catalog requires the desktop or mobile app": "Zum Abspielen dieses Katalogs wird die Desktop- oder Mobil-App benötigt",
+  "{{hours}}h {{minutes}}m": "{{hours}} Std. {{minutes}} Min.",
+  "{{minutes}}m": "{{minutes}} Min.",
+  "{{seconds}}s": "{{seconds}} Sek.",
+  "Could not read the length of every track in this audiobook": "Die Länge konnte nicht für jeden Titel dieses Hörbuchs ermittelt werden"
 }

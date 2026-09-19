@@ -2452,5 +2452,11 @@
   "Pull-Down to Bookmark": "Pociągnij w dół, aby dodać zakładkę",
   "Pronunciation": "Wymowa",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Odtwarza nagranie dołączone przez słownik do hasła, jeśli takie istnieje.",
-  "Auto-play Pronunciation": "Automatycznie odtwarzaj wymowę"
+  "Auto-play Pronunciation": "Automatycznie odtwarzaj wymowę",
+  "Failed to start playback": "Nie udało się rozpocząć odtwarzania",
+  "Playing this catalog requires the desktop or mobile app": "Odtwarzanie tego katalogu wymaga aplikacji na komputer lub telefon",
+  "{{hours}}h {{minutes}}m": "{{hours}} godz. {{minutes}} min",
+  "{{minutes}}m": "{{minutes}} min",
+  "{{seconds}}s": "{{seconds}} s",
+  "Could not read the length of every track in this audiobook": "Nie udało się odczytać długości każdej ścieżki tego audiobooka"
 }

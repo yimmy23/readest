@@ -2272,5 +2272,11 @@
   "Pull-Down to Bookmark": "ดึงลงเพื่อเพิ่มบุ๊กมาร์ก",
   "Pronunciation": "การออกเสียง",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "เล่นไฟล์เสียงที่พจนานุกรมแนบมากับรายการคำ หากมี",
-  "Auto-play Pronunciation": "เล่นเสียงอ่านอัตโนมัติ"
+  "Auto-play Pronunciation": "เล่นเสียงอ่านอัตโนมัติ",
+  "Failed to start playback": "ไม่สามารถเริ่มเล่นได้",
+  "Playing this catalog requires the desktop or mobile app": "การเล่นแค็ตตาล็อกนี้ต้องใช้แอปเดสก์ท็อปหรือมือถือ",
+  "{{hours}}h {{minutes}}m": "{{hours}} ชม. {{minutes}} นาที",
+  "{{minutes}}m": "{{minutes}} นาที",
+  "{{seconds}}s": "{{seconds}} วิ",
+  "Could not read the length of every track in this audiobook": "ไม่สามารถอ่านความยาวของทุกแทร็กในหนังสือเสียงนี้ได้"
 }

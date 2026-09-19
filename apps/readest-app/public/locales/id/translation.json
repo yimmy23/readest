@@ -2272,5 +2272,11 @@
   "Pull-Down to Bookmark": "Tarik ke bawah untuk menambahkan penanda",
   "Pronunciation": "Pelafalan",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Memutar rekaman yang disertakan kamus pada entri, jika ada.",
-  "Auto-play Pronunciation": "Putar pelafalan otomatis"
+  "Auto-play Pronunciation": "Putar pelafalan otomatis",
+  "Failed to start playback": "Gagal memulai pemutaran",
+  "Playing this catalog requires the desktop or mobile app": "Memutar katalog ini memerlukan aplikasi desktop atau seluler",
+  "{{hours}}h {{minutes}}m": "{{hours}} j {{minutes}} mnt",
+  "{{minutes}}m": "{{minutes}} mnt",
+  "{{seconds}}s": "{{seconds}} dtk",
+  "Could not read the length of every track in this audiobook": "Tidak dapat membaca durasi setiap trek dalam buku audio ini"
 }

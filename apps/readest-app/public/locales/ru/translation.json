@@ -2452,5 +2452,11 @@
   "Pull-Down to Bookmark": "Потяните вниз, чтобы добавить закладку",
   "Pronunciation": "Произношение",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Воспроизводит запись, которую словарь прилагает к статье, если она есть.",
-  "Auto-play Pronunciation": "Автоматически воспроизводить произношение"
+  "Auto-play Pronunciation": "Автоматически воспроизводить произношение",
+  "Failed to start playback": "Не удалось начать воспроизведение",
+  "Playing this catalog requires the desktop or mobile app": "Для воспроизведения этого каталога нужно приложение для компьютера или телефона",
+  "{{hours}}h {{minutes}}m": "{{hours}} ч {{minutes}} мин",
+  "{{minutes}}m": "{{minutes}} мин",
+  "{{seconds}}s": "{{seconds}} с",
+  "Could not read the length of every track in this audiobook": "Не удалось определить длительность каждой дорожки этой аудиокниги"
 }

@@ -2392,5 +2392,11 @@
   "Pull-Down to Bookmark": "Puxe para baixo para adicionar marcador",
   "Pronunciation": "Pronúncia",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Reproduz a gravação que o dicionário inclui no verbete, quando existe.",
-  "Auto-play Pronunciation": "Reproduzir a pronúncia automaticamente"
+  "Auto-play Pronunciation": "Reproduzir a pronúncia automaticamente",
+  "Failed to start playback": "Falha ao iniciar a reprodução",
+  "Playing this catalog requires the desktop or mobile app": "Reproduzir este catálogo requer o aplicativo para desktop ou celular",
+  "{{hours}}h {{minutes}}m": "{{hours}} h {{minutes}} min",
+  "{{minutes}}m": "{{minutes}} min",
+  "{{seconds}}s": "{{seconds}} s",
+  "Could not read the length of every track in this audiobook": "Não foi possível ler a duração de todas as faixas deste audiolivro"
 }

@@ -2332,5 +2332,11 @@
   "Pull-Down to Bookmark": "Τραβήξτε προς τα κάτω για προσθήκη σελιδοδείκτη",
   "Pronunciation": "Προφορά",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Αναπαράγει την ηχογράφηση που συνοδεύει το λήμμα στο λεξικό, όταν υπάρχει.",
-  "Auto-play Pronunciation": "Αυτόματη αναπαραγωγή προφοράς"
+  "Auto-play Pronunciation": "Αυτόματη αναπαραγωγή προφοράς",
+  "Failed to start playback": "Αποτυχία έναρξης αναπαραγωγής",
+  "Playing this catalog requires the desktop or mobile app": "Η αναπαραγωγή αυτού του καταλόγου απαιτεί την εφαρμογή για υπολογιστή ή κινητό",
+  "{{hours}}h {{minutes}}m": "{{hours}}ώ {{minutes}}λ",
+  "{{minutes}}m": "{{minutes}}λ",
+  "{{seconds}}s": "{{seconds}}δ",
+  "Could not read the length of every track in this audiobook": "Δεν ήταν δυνατή η ανάγνωση της διάρκειας κάθε κομματιού αυτού του ηχητικού βιβλίου"
 }

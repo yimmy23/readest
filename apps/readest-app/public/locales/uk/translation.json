@@ -2452,5 +2452,11 @@
   "Pull-Down to Bookmark": "Потягніть вниз, щоб додати закладку",
   "Pronunciation": "Вимова",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Відтворює запис, який словник додає до статті, якщо він є.",
-  "Auto-play Pronunciation": "Автоматично відтворювати вимову"
+  "Auto-play Pronunciation": "Автоматично відтворювати вимову",
+  "Failed to start playback": "Не вдалося почати відтворення",
+  "Playing this catalog requires the desktop or mobile app": "Для відтворення цього каталогу потрібен застосунок для комп’ютера або телефона",
+  "{{hours}}h {{minutes}}m": "{{hours}} год {{minutes}} хв",
+  "{{minutes}}m": "{{minutes}} хв",
+  "{{seconds}}s": "{{seconds}} с",
+  "Could not read the length of every track in this audiobook": "Не вдалося визначити тривалість кожної доріжки цієї аудіокниги"
 }

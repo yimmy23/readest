@@ -2332,5 +2332,11 @@
   "Pull-Down to Bookmark": "Trek omlaag om bladwijzer toe te voegen",
   "Pronunciation": "Uitspraak",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Speelt de opname af die een woordenboek bij het lemma levert, als die er is.",
-  "Auto-play Pronunciation": "Uitspraak automatisch afspelen"
+  "Auto-play Pronunciation": "Uitspraak automatisch afspelen",
+  "Failed to start playback": "Afspelen kon niet worden gestart",
+  "Playing this catalog requires the desktop or mobile app": "Het afspelen van deze catalogus vereist de desktop- of mobiele app",
+  "{{hours}}h {{minutes}}m": "{{hours}} u {{minutes}} min",
+  "{{minutes}}m": "{{minutes}} min",
+  "{{seconds}}s": "{{seconds}} s",
+  "Could not read the length of every track in this audiobook": "Kan de lengte van elk fragment van dit luisterboek niet lezen"
 }

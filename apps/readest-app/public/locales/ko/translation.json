@@ -2272,5 +2272,11 @@
   "Pull-Down to Bookmark": "아래로 당겨 북마크 추가",
   "Pronunciation": "발음",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "사전이 표제어에 함께 담은 녹음이 있으면 재생합니다.",
-  "Auto-play Pronunciation": "발음 자동 재생"
+  "Auto-play Pronunciation": "발음 자동 재생",
+  "Failed to start playback": "재생을 시작할 수 없습니다",
+  "Playing this catalog requires the desktop or mobile app": "이 카탈로그를 재생하려면 데스크톱 또는 모바일 앱이 필요합니다",
+  "{{hours}}h {{minutes}}m": "{{hours}}시간 {{minutes}}분",
+  "{{minutes}}m": "{{minutes}}분",
+  "{{seconds}}s": "{{seconds}}초",
+  "Could not read the length of every track in this audiobook": "이 오디오북의 모든 트랙 길이를 읽지 못했습니다"
 }

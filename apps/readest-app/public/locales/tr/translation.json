@@ -2332,5 +2332,11 @@
   "Pull-Down to Bookmark": "Yer işareti eklemek için aşağı çekin",
   "Pronunciation": "Telaffuz",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Sözlüğün maddeyle birlikte sunduğu kaydı, varsa çalar.",
-  "Auto-play Pronunciation": "Telaffuzu otomatik çal"
+  "Auto-play Pronunciation": "Telaffuzu otomatik çal",
+  "Failed to start playback": "Oynatma başlatılamadı",
+  "Playing this catalog requires the desktop or mobile app": "Bu kataloğu oynatmak masaüstü veya mobil uygulamayı gerektirir",
+  "{{hours}}h {{minutes}}m": "{{hours}} sa {{minutes}} dk",
+  "{{minutes}}m": "{{minutes}} dk",
+  "{{seconds}}s": "{{seconds}} sn",
+  "Could not read the length of every track in this audiobook": "Bu sesli kitaptaki her parçanın uzunluğu okunamadı"
 }

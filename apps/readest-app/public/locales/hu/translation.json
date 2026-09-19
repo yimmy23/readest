@@ -2332,5 +2332,11 @@
   "Pull-Down to Bookmark": "Húzza le könyvjelző hozzáadásához",
   "Pronunciation": "Kiejtés",
   "Plays the recording a dictionary bundles with the entry, when it has one.": "Lejátssza a szótár szócikkéhez mellékelt felvételt, ha van ilyen.",
-  "Auto-play Pronunciation": "Kiejtés automatikus lejátszása"
+  "Auto-play Pronunciation": "Kiejtés automatikus lejátszása",
+  "Failed to start playback": "A lejátszás indítása sikertelen",
+  "Playing this catalog requires the desktop or mobile app": "A katalógus lejátszásához az asztali vagy mobilalkalmazás szükséges",
+  "{{hours}}h {{minutes}}m": "{{hours}} ó {{minutes}} p",
+  "{{minutes}}m": "{{minutes}} p",
+  "{{seconds}}s": "{{seconds}} mp",
+  "Could not read the length of every track in this audiobook": "Nem sikerült beolvasni a hangoskönyv minden sávjának hosszát"
 }
