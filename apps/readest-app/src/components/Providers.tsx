@@ -7,6 +7,7 @@ import { IconContext } from 'react-icons';
 import { AuthProvider } from '@/context/AuthContext';
 import { useEnv } from '@/context/EnvContext';
 import WindowResizeHandles from '@/components/WindowResizeHandles';
+import WindowOutline from '@/components/WindowOutline';
 import { CSPostHogProvider, initPostHog } from '@/context/PHContext';
 import { SyncProvider } from '@/context/SyncContext';
 import { initSystemThemeListener, loadDataTheme } from '@/store/themeStore';
@@ -264,6 +265,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
                   onClose={() => setShowTelemetryConsent(false)}
                 />
                 {showAppLockScreen && <AppLockScreen />}
+                <WindowOutline />
               </CommandPaletteProvider>
             </DropdownProvider>
           </SyncProvider>
