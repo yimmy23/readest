@@ -464,15 +464,31 @@ export async function createBackupZipToFile(
   const { writeFile } = await import('@tauri-apps/plugin-fs');
 
   await writeFile(filePath, new Uint8Array());
-  const { readable, writable } = new TransformStream<Uint8Array>();
+  let stream!: TransformStreamDefaultController<Uint8Array>;
+  const { readable, writable } = new TransformStream<Uint8Array>({
+    start: (controller) => {
+      stream = controller;
+    },
+  });
+  // When either side fails, error the stream so the other one stops too:
+  // the zip writer would wait on backpressure forever (#6375) and the file
+  // write would keep reading, its file open, until the stream ends.
+  const failBoth = (error: unknown) => {
+    stream.error(error);
+    throw error;
+  };
 
   // Start streaming readable side to the file (runs concurrently)
-  const writePromise = writeFile(filePath, readable);
-
-  const writer = new ZipWriter(writable);
-  await addBackupEntriesToZip(writer, appService, options, onProgress);
-  await writer.close();
-  await writePromise;
+  const writePromise = writeFile(filePath, readable).catch(failBoth);
+  const zipPromise = (async () => {
+    const writer = new ZipWriter(writable);
+    await addBackupEntriesToZip(writer, appService, options, onProgress);
+    await writer.close();
+  })().catch(failBoth);
+  // Wait for both: the caller may delete the file as soon as this returns.
+  const results = await Promise.allSettled([writePromise, zipPromise]);
+  const failure = results.find((result) => result.status === 'rejected');
+  if (failure) throw failure.reason;
 }
 
 /**
@@ -724,7 +740,25 @@ export async function saveBackupFile(
   options: BackupOptions = {},
   onProgress?: ProgressCallback,
 ): Promise<boolean> {
-  if (isTauriAppPlatform()) {
+  if (isTauriAppPlatform() && appService.isIOSApp) {
+    // The iOS save picker only exports a file: the URL it returns is not
+    // writable afterwards (EPERM, #6375). Write the zip inside the sandbox
+    // and let the share sheet's "Save to Files" copy it out.
+    const stagedName = `shared/${filename}`;
+    await appService.createDir('shared', 'Temp', true);
+    const stagedPath = await appService.resolveFilePath(stagedName, 'Temp');
+    try {
+      await createBackupZipToFile(appService, stagedPath, options, onProgress);
+      const { shareFile } = await import('@choochmeque/tauri-plugin-sharekit-api');
+      await shareFile(stagedPath, { mimeType: 'application/zip' });
+      return true;
+    } catch (error) {
+      if (error === 'Share cancelled') return false;
+      throw error;
+    } finally {
+      await appService.deleteFile(stagedName, 'Temp').catch(() => {});
+    }
+  } else if (isTauriAppPlatform()) {
     // Tauri: stream directly to the chosen file path
     const { save: saveDialog } = await import('@tauri-apps/plugin-dialog');
     const ext = filename.split('.').pop() || 'zip';
