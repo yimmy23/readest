@@ -2409,5 +2409,7 @@
   "Scroll up for the next page": "向上滚动翻到下一页",
   "Keep Text Selected After Lookup": "查词后保持文本选中",
   "Sentence around the highlight": "高亮所在的句子",
-  "Do not speak readings or Hanja glosses in parentheses after a word": "不朗读词语后括号内的读音或汉字注释"
+  "Do not speak readings or Hanja glosses in parentheses after a word": "不朗读词语后括号内的读音或汉字注释",
+  "Visible as {{name}}": "显示为 {{name}}",
+  "Local Network": "局域网"
 }

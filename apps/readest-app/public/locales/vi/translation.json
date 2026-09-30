@@ -2409,5 +2409,7 @@
   "Scroll up for the next page": "Cuộn lên để sang trang tiếp theo",
   "Keep Text Selected After Lookup": "Giữ văn bản được chọn sau khi tra cứu",
   "Sentence around the highlight": "Câu chứa phần tô sáng",
-  "Do not speak readings or Hanja glosses in parentheses after a word": "Không đọc cách đọc hoặc chú thích Hanja trong ngoặc đơn sau một từ"
+  "Do not speak readings or Hanja glosses in parentheses after a word": "Không đọc cách đọc hoặc chú thích Hanja trong ngoặc đơn sau một từ",
+  "Visible as {{name}}": "Hiển thị với tên {{name}}",
+  "Local Network": "Mạng cục bộ"
 }

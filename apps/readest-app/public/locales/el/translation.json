@@ -2469,5 +2469,7 @@
   "Scroll up for the next page": "Κύλιση προς τα πάνω για την επόμενη σελίδα",
   "Keep Text Selected After Lookup": "Διατήρηση επιλογής κειμένου μετά την αναζήτηση",
   "Sentence around the highlight": "Πρόταση γύρω από την επισήμανση",
-  "Do not speak readings or Hanja glosses in parentheses after a word": "Να μην εκφωνούνται αναγνώσεις ή επεξηγήσεις hanja σε παρένθεση μετά από μια λέξη"
+  "Do not speak readings or Hanja glosses in parentheses after a word": "Να μην εκφωνούνται αναγνώσεις ή επεξηγήσεις hanja σε παρένθεση μετά από μια λέξη",
+  "Visible as {{name}}": "Ορατό ως {{name}}",
+  "Local Network": "Τοπικό δίκτυο"
 }

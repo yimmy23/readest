@@ -2469,5 +2469,7 @@
   "Scroll up for the next page": "Keyingi sahifa uchun yuqoriga aylantiring",
   "Keep Text Selected After Lookup": "Qidiruvdan keyin matn belgilangan qolsin",
   "Sentence around the highlight": "Ajratilgan matn atrofidagi gap",
-  "Do not speak readings or Hanja glosses in parentheses after a word": "So‘zdan keyingi qavs ichidagi o‘qilishlar yoki hanja izohlarini o‘qimaslik"
+  "Do not speak readings or Hanja glosses in parentheses after a word": "So‘zdan keyingi qavs ichidagi o‘qilishlar yoki hanja izohlarini o‘qimaslik",
+  "Visible as {{name}}": "{{name}} nomi bilan koʻrinadi",
+  "Local Network": "Mahalliy tarmoq"
 }

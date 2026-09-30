@@ -2469,5 +2469,7 @@
   "Scroll up for the next page": "Görgessen felfelé a következő oldalhoz",
   "Keep Text Selected After Lookup": "Szöveg kijelölve marad keresés után",
   "Sentence around the highlight": "A kiemelést tartalmazó mondat",
-  "Do not speak readings or Hanja glosses in parentheses after a word": "Ne olvassa fel a szó utáni zárójeles olvasatokat vagy handzsa glosszákat"
+  "Do not speak readings or Hanja glosses in parentheses after a word": "Ne olvassa fel a szó utáni zárójeles olvasatokat vagy handzsa glosszákat",
+  "Visible as {{name}}": "Látható ezen a néven: {{name}}",
+  "Local Network": "Helyi hálózat"
 }

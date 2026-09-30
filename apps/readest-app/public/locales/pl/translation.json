@@ -2589,5 +2589,7 @@
   "Scroll up for the next page": "Przewiń w górę, aby przejść do następnej strony",
   "Keep Text Selected After Lookup": "Zachowaj zaznaczenie tekstu po wyszukaniu",
   "Sentence around the highlight": "Zdanie wokół zaznaczenia",
-  "Do not speak readings or Hanja glosses in parentheses after a word": "Nie odczytuj odczytań ani glos w hanja w nawiasach po słowie"
+  "Do not speak readings or Hanja glosses in parentheses after a word": "Nie odczytuj odczytań ani glos w hanja w nawiasach po słowie",
+  "Visible as {{name}}": "Widoczne jako {{name}}",
+  "Local Network": "Sieć lokalna"
 }

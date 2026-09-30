@@ -2469,5 +2469,7 @@
   "Scroll up for the next page": "Sonraki sayfa için yukarı kaydırın",
   "Keep Text Selected After Lookup": "Aramadan sonra metni seçili tut",
   "Sentence around the highlight": "Vurgunun geçtiği cümle",
-  "Do not speak readings or Hanja glosses in parentheses after a word": "Bir kelimeden sonra parantez içindeki okunuşları veya Hanja açıklamalarını seslendirme"
+  "Do not speak readings or Hanja glosses in parentheses after a word": "Bir kelimeden sonra parantez içindeki okunuşları veya Hanja açıklamalarını seslendirme",
+  "Visible as {{name}}": "{{name}} olarak görünür",
+  "Local Network": "Yerel Ağ"
 }

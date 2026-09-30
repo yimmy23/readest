@@ -2409,5 +2409,7 @@
   "Scroll up for the next page": "เลื่อนขึ้นเพื่อไปหน้าถัดไป",
   "Keep Text Selected After Lookup": "คงการเลือกข้อความไว้หลังค้นหา",
   "Sentence around the highlight": "ประโยคที่อยู่รอบไฮไลต์",
-  "Do not speak readings or Hanja glosses in parentheses after a word": "ไม่อ่านคำอ่านหรือคำกำกับฮันจาในวงเล็บหลังคำ"
+  "Do not speak readings or Hanja glosses in parentheses after a word": "ไม่อ่านคำอ่านหรือคำกำกับฮันจาในวงเล็บหลังคำ",
+  "Visible as {{name}}": "มองเห็นในชื่อ {{name}}",
+  "Local Network": "เครือข่ายท้องถิ่น"
 }
